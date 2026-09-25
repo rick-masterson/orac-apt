@@ -1,9 +1,12 @@
 """packaging/orac-branding: pin the two theme defects found when packaging it.
 
-The Plymouth script shipped in the theme zip called Sprite.SetScale, Plymouth.GetTime and
-Plymouth.SetMessageFunction -- none exist in Plymouth's script plugin -- so its progress bar
-and status line never moved. The KSplash QML assigned a bare `letterSpacing`, which is not a
-Text property, so the whole splash failed to load. Neither is visible without booting.
+The Plymouth script shipped in the theme zip called Sprite.SetScale and Plymouth.GetTime, neither
+of which exists in Plymouth's script plugin, so its progress bar and background animation never
+moved; its password sprites were function locals, which vanish on return. (It also called
+Plymouth.SetMessageFunction, first recorded here as nonexistent too. It is a valid alias for
+SetDisplayMessageFunction, defined in Plymouth's script-lib-plymouth.script; corrected 2026-09-25.)
+The KSplash QML assigned a bare `letterSpacing`, which is not a Text property, so the whole splash
+failed to load. Neither is visible without booting.
 """
 import os
 import re
@@ -23,7 +26,8 @@ PLYMOUTH_SETTERS = {
     "SetDisplayPasswordFunction", "SetDisplayQuestionFunction", "SetDisplayPromptFunction",
     "SetDisplayMessageFunction", "SetHideMessageFunction", "SetQuitFunction",
     "SetSystemUpdateFunction", "SetValidateInputFunction", "SetDisplayHotplugFunction",
-    "SetRefreshRate", "GetMode",
+    "SetRefreshRate", "GetMode", "GetCapslockState",
+    "SetMessageFunction",  # alias of SetDisplayMessageFunction (script-lib-plymouth.script)
 }
 SPRITE_METHODS = {"SetImage", "GetImage", "SetX", "SetY", "SetZ", "GetX", "GetY", "GetZ",
                   "SetPosition", "SetOpacity", "GetOpacity"}

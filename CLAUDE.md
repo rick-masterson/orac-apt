@@ -46,7 +46,11 @@ There are no public source repos, only the website and the APT repo. No Shadowfe
 `packages/orac-branding/`: `root/` is the filesystem tree, `DEBIAN/` holds control and the maintainer scripts,
 `build.sh` uses plain `dpkg-deb`. It ships:
 - Plymouth theme `orac`. The script was rewritten against the real script-plugin API: the original zip used
-  `Sprite.SetScale`, `Plymouth.GetTime` and `Plymouth.SetMessageFunction`, none of which exist.
+  `Sprite.SetScale` and `Plymouth.GetTime` (neither exists), and its password sprites were function locals that
+  vanish. **Correction (2026-09-25):** the 1.0.0 changelog also calls `Plymouth.SetMessageFunction` nonexistent.
+  It is a valid alias of `SetDisplayMessageFunction` (Plymouth's `script-lib-plymouth.script`). Say so in the next
+  release's changelog entry. To check any Plymouth theme, use the `plymouth-theme` skill's checker in
+  `rick-masterson/Claude` (`plugins/desktop-theming`), which reads its API lists from Plymouth's source.
 - Plasma look-and-feel `org.orac.workstation` with a KSplash, on `ShadowfetchDark` plus a purple accent. The
   original QML's bare `letterSpacing` made it fail to load.
 - Wallpapers: `OracOrb`, `OracMinimal`, `OracWorkstation`.
