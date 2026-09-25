@@ -28,6 +28,8 @@ for arch in amd64 all; do
     gzip -9n -c "$dir/Packages" > "$dir/Packages.gz"
 done
 
+# Write Release OUTSIDE dists/ and move it in: `> dists/$suite/Release` creates the file before apt-ftparchive hashes
+# the directory, so the Release listed a partial copy of itself (found by verify_apt_repo.py, 2026-09-25).
 apt-ftparchive \
     -o APT::FTPArchive::Release::Origin=ORAC \
     -o APT::FTPArchive::Release::Label=ORAC \
@@ -36,7 +38,8 @@ apt-ftparchive \
     -o "APT::FTPArchive::Release::Architectures=amd64 all" \
     -o APT::FTPArchive::Release::Components=main \
     -o "APT::FTPArchive::Release::Description=ORAC packages for Shadowfetch" \
-    release "dists/$suite" > "dists/$suite/Release"
+    release "dists/$suite" > "$out/Release.tmp"
+mv "$out/Release.tmp" "dists/$suite/Release"
 
 if [ -z "${APT_SIGNING_KEY:-}" ]; then
     echo "build-repo: APT_SIGNING_KEY not set -- repository is UNSIGNED (local check only)" >&2
