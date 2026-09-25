@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: orac-branding
+
+Files: *
+Copyright: 2026 Rick Masterson
+License: GPL-3.0+
+ On Debian systems the full text of the GNU General Public License version 3
+ is in /usr/share/common-licenses/GPL-3.

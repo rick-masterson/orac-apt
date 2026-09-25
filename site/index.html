@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORAC APT</title>
+<style>
+  :root { color-scheme: dark; --bg:#000; --fg:#d6dbe1; --accent:#c084fc; --muted:#8b8fa3; --panel:#0d0b14; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px; }
+  h1 { color:var(--accent); letter-spacing:.3em; font-weight:700; margin:0 0 4px; }
+  p.sub { color:var(--muted); margin:0 0 32px; }
+  h2 { color:var(--accent); font-size:1rem; letter-spacing:.08em; text-transform:uppercase; margin-top:32px; }
+  pre { background:var(--panel); border:1px solid #2a2140; border-radius:8px; padding:12px 14px; overflow-x:auto; font-size:.85rem; }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<main>
+<h1>O R A C</h1>
+<p class="sub">Signed APT repository for ORAC packages on Shadowfetch / Debian.</p>
+
+<h2>Add the repository</h2>
+<pre><code>sudo curl -fsSLo /etc/apt/keyrings/orac-archive-keyring.gpg https://rick-masterson.github.io/orac-apt/orac-archive-keyring.gpg
+gpg --show-keys /etc/apt/keyrings/orac-archive-keyring.gpg
+# fingerprint must be 5E0E E21B EFCD AE36 233D  AE59 DFEB 3540 08E6 86D7
+
+printf 'Types: deb\nURIs: https://rick-masterson.github.io/orac-apt/\nSuites: stable\nComponents: main\nSigned-By: /etc/apt/keyrings/orac-archive-keyring.gpg\n' | sudo tee /etc/apt/sources.list.d/orac.sources
+sudo apt update</code></pre>
+
+<h2>Install</h2>
+<pre><code>sudo apt install orac-branding</code></pre>
+
+<h2>Packages</h2>
+<p><code>orac-branding</code> — Plymouth boot splash, Plasma look-and-feel with login splash, and ORAC wallpapers.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,17 @@
+Package: orac-branding
+Version: 1.0.0-1
+Architecture: all
+Maintainer: Rick Masterson <rickm1982@gmail.com>
+Section: misc
+Priority: optional
+Depends: plymouth, plymouth-label
+Recommends: shadowfetch-themes, plasma-workspace, papirus-icon-theme
+Description: ORAC workstation branding for Shadowfetch
+ The ORAC look layered on Shadowfetch's own branding and themes packages:
+ a Plymouth boot splash with real boot progress, boot messages and an
+ encrypted-drive unlock prompt; a Plasma look-and-feel (org.orac.workstation)
+ with its KSplash login splash; and the ORAC Orb, Minimal and Workstation
+ wallpaper sets.
+ .
+ Installing registers the boot splash but does not switch to it. Activate it
+ with: sudo plymouth-set-default-theme -R orac

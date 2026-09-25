@@ -1,0 +1,15 @@
+orac-branding (1.0.0-1) umbra; urgency=medium
+
+  * First package: Plymouth splash, Plasma look-and-feel with KSplash, and
+    three wallpaper sets, built from the ORAC workstation and Plymouth theme
+    zips.
+  * Plymouth script rewritten against the script plugin's real API: the zip's
+    version called Sprite.SetScale and Plymouth.GetTime (neither exists) and
+    Plymouth.SetMessageFunction (it is SetDisplayMessageFunction), so its
+    progress bar and status line never moved; its password sprites were held in
+    function locals and vanished on return.
+  * KSplash: font.letterSpacing (a bare letterSpacing stops the QML loading),
+    an #AARRGGBB vignette (the zip's #000000AA was fully transparent), and
+    dots that follow the session stage.
+
+ -- Rick Masterson <rickm1982@gmail.com>  Thu, 24 Sep 2026 19:30:00 +0000

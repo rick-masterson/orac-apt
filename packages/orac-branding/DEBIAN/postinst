@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+THEME=/usr/share/plymouth/themes/orac/orac.plymouth
+if [ "$1" = configure ]; then
+    # Registered at a low priority: installing must not switch the boot splash.
+    update-alternatives --install /usr/share/plymouth/themes/default.plymouth \
+        default.plymouth "$THEME" 50
+    # If ORAC is already the active splash, the initramfs holds the old copy.
+    if [ -n "$2" ] && command -v plymouth-set-default-theme >/dev/null 2>&1 \
+        && [ "$(plymouth-set-default-theme)" = orac ] \
+        && command -v update-initramfs >/dev/null 2>&1; then
+        update-initramfs -u
+    fi
+fi
+exit 0

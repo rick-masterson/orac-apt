@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "OracOrb",
+    "Name": "ORAC Orb",
+    "License": "GPL-3.0",
+    "Authors": [
+      {
+        "Name": "Rick Masterson"
+      }
+    ]
+  }
+}

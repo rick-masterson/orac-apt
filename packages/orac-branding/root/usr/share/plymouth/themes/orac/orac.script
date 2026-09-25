@@ -1,0 +1,173 @@
+# ORAC Plymouth boot splash.
+# Void black, blue lightning orb, purple progress bar, pulsing status dots.
+#
+# Only calls that exist in Plymouth's script plugin: a Sprite cannot be scaled
+# (the Image is scaled and re-set instead), there is no Plymouth.GetTime (the
+# refresh callback keeps its own tick), and boot messages arrive through
+# SetDisplayMessageFunction. Every sprite is held in a global: a sprite held
+# only by a function local disappears when the function returns.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+screen.w = Window.GetWidth();
+screen.h = Window.GetHeight();
+screen.x = Window.GetX();
+screen.y = Window.GetY();
+
+# --- Background: scaled once to cover the screen, centred ---
+bg.image = Image("background.png");
+bg.scale = Math.Max(screen.w / bg.image.GetWidth(), screen.h / bg.image.GetHeight());
+bg.w = Math.Int(bg.image.GetWidth() * bg.scale + 0.5);
+bg.h = Math.Int(bg.image.GetHeight() * bg.scale + 0.5);
+bg.image = bg.image.Scale(bg.w, bg.h);
+bg.sprite = Sprite(bg.image);
+bg.sprite.SetPosition(screen.x + (screen.w - bg.w) / 2, screen.y + (screen.h - bg.h) / 2, -10);
+
+# --- Progress box and bar ---
+box.image = Image("box.png");
+box.x = screen.x + screen.w / 2 - box.image.GetWidth() / 2;
+box.y = screen.y + screen.h * 0.84;
+box.sprite = Sprite(box.image);
+box.sprite.SetPosition(box.x, box.y, 10);
+
+bar.source = Image("bar.png");
+bar.x = box.x + (box.image.GetWidth() - bar.source.GetWidth()) / 2;
+bar.y = box.y + (box.image.GetHeight() - bar.source.GetHeight()) / 2;
+bar.sprite = Sprite();
+bar.sprite.SetPosition(bar.x, bar.y, 11);
+bar.shown = 0;
+
+# --- Status dots: solid once boot passes them, pulsing ahead of it ---
+dot_count = 5;
+dot_gap = 18;
+dot_image = Image("dot.png");
+dot_size = dot_image.GetWidth();
+dots_x0 = screen.x + screen.w / 2 - (dot_count * dot_size + (dot_count - 1) * dot_gap) / 2;
+dots_y = box.y - dot_size - 24;
+for (i = 0; i < dot_count; i++) {
+    dots[i].sprite = Sprite(dot_image);
+    dots[i].sprite.SetPosition(dots_x0 + i * (dot_size + dot_gap), dots_y, 12);
+    dots[i].sprite.SetOpacity(0.25);
+}
+
+# --- Wordmark (#c084fc) ---
+brand.image = Image.Text("O R A C", 0.75, 0.52, 0.99, 1, "Sans Bold 14");
+brand.sprite = Sprite(brand.image);
+brand.sprite.SetPosition(screen.x + screen.w / 2 - brand.image.GetWidth() / 2,
+                         dots_y - brand.image.GetHeight() - 20, 12);
+
+# --- Boot message line, under the bar (#99c7ff) ---
+message.sprite = Sprite();
+message.y = box.y + box.image.GetHeight() + 18;
+
+state.progress = 0;
+state.tick = 0;
+state.spinner = 1;
+
+fun boot_progress_callback(duration, progress) {
+    if (progress < 0) progress = 0;
+    if (progress > 1) progress = 1;
+    state.progress = progress;
+    width = Math.Int(bar.source.GetWidth() * progress);
+    if (width > 0 && width != bar.shown) {
+        bar.shown = width;
+        bar.sprite.SetImage(bar.source.Scale(width, bar.source.GetHeight()));
+    }
+}
+
+fun refresh_callback() {
+    if (state.spinner) {
+        state.tick++;
+        lit = Math.Int(state.progress * dot_count);
+        for (i = 0; i < dot_count; i++) {
+            if (i < lit) {
+                dots[i].sprite.SetOpacity(1);
+            } else {
+                # Triangle wave, 60 ticks per cycle, staggered per dot.
+                phase = (state.tick + (dot_count - i) * 12) % 60;
+                level = phase / 30;
+                if (phase >= 30) level = (60 - phase) / 30;
+                dots[i].sprite.SetOpacity(0.25 + 0.75 * level);
+            }
+        }
+    }
+}
+
+# Offline system updates (and `plymouth system-update --progress=N`) report 0..100.
+fun system_update_callback(progress) {
+    boot_progress_callback(0, progress / 100);
+}
+
+fun display_message_callback(text) {
+    message.image = Image.Text(text, 0.60, 0.78, 1.0, 1, "Sans 11");
+    message.sprite.SetImage(message.image);
+    message.sprite.SetPosition(screen.x + screen.w / 2 - message.image.GetWidth() / 2, message.y, 20);
+    message.sprite.SetOpacity(1);
+}
+
+fun hide_message_callback(text) {
+    message.sprite.SetOpacity(0);
+}
+
+Plymouth.SetBootProgressFunction(boot_progress_callback);
+Plymouth.SetRefreshFunction(refresh_callback);
+Plymouth.SetSystemUpdateFunction(system_update_callback);
+Plymouth.SetDisplayMessageFunction(display_message_callback);
+Plymouth.SetHideMessageFunction(hide_message_callback);
+
+# --- Encrypted-drive unlock: replaces the wordmark and dots while shown ---
+password.title.image = Image.Text("UNLOCK ENCRYPTED DRIVE", 0.75, 0.52, 0.99, 1, "Sans Bold 13");
+password.title.sprite = Sprite(password.title.image);
+password.title.sprite.SetPosition(screen.x + screen.w / 2 - password.title.image.GetWidth() / 2,
+                                  dots_y - password.title.image.GetHeight() - 20, 20);
+password.title.sprite.SetOpacity(0);
+
+password.bullet_image = Image("bullet.png");
+password.bullet_size = password.bullet_image.GetWidth();
+password.bullet_gap = 6;
+password.max_bullets = 32;
+
+fun set_spinner_visible(visible) {
+    state.spinner = visible;
+    brand.sprite.SetOpacity(visible);
+    for (i = 0; i < dot_count; i++) {
+        dots[i].sprite.SetOpacity(visible * 0.25);
+    }
+}
+
+fun show_password_dialogue() {
+    set_spinner_visible(0);
+    password.title.sprite.SetOpacity(1);
+}
+
+fun display_password_callback(prompt, bullets) {
+    show_password_dialogue();
+    if (bullets > password.max_bullets) bullets = password.max_bullets;
+    step = password.bullet_size + password.bullet_gap;
+    x0 = screen.x + screen.w / 2 - (bullets * step - password.bullet_gap) / 2;
+    for (index = 0; password.bullets[index] || index < bullets; index++) {
+        if (!password.bullets[index]) password.bullets[index].sprite = Sprite(password.bullet_image);
+        password.bullets[index].sprite.SetPosition(x0 + index * step, dots_y, 20);
+        password.bullets[index].sprite.SetOpacity(0);
+        if (index < bullets) password.bullets[index].sprite.SetOpacity(1);
+    }
+}
+
+# Plymouth also emits the generic prompt callback for secret prompts; keep the
+# dialogue visible so the unlock screen is never blank.
+fun display_prompt_callback(prompt, entry_text, is_secret) {
+    if (is_secret) show_password_dialogue();
+}
+
+fun display_normal_callback() {
+    password.title.sprite.SetOpacity(0);
+    for (index = 0; password.bullets[index]; index++) {
+        password.bullets[index].sprite.SetOpacity(0);
+    }
+    set_spinner_visible(1);
+}
+
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayPromptFunction(display_prompt_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);

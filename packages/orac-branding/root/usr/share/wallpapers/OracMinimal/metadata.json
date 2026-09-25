@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "OracMinimal",
+    "Name": "ORAC Minimal",
+    "License": "GPL-3.0",
+    "Authors": [
+      {
+        "Name": "Rick Masterson"
+      }
+    ]
+  }
+}
