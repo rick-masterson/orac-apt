@@ -9,12 +9,12 @@ trap 'rm -rf "$stage"' EXIT
 
 cp -a "$here/root/." "$stage/"
 mkdir -p "$stage/DEBIAN"
-cp "$here/DEBIAN/control" "$here/DEBIAN/postinst" "$here/DEBIAN/prerm" "$stage/DEBIAN/"
+cp "$here/DEBIAN/control" "$here/DEBIAN/postinst" "$here/DEBIAN/prerm" "$here/DEBIAN/postrm" "$stage/DEBIAN/"
 gzip -9n -c "$here/changelog" > "$stage/usr/share/doc/orac-branding/changelog.Debian.gz"
 
 find "$stage" -type d -exec chmod 0755 {} +
 find "$stage" -type f -exec chmod 0644 {} +
-chmod 0755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/prerm"
+chmod 0755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/prerm" "$stage/DEBIAN/postrm"
 if [ -d "$stage/usr/bin" ]; then chmod 0755 "$stage"/usr/bin/*; fi
 
 size=$(du -sk --exclude=DEBIAN "$stage" | cut -f1)

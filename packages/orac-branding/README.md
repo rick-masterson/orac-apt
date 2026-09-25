@@ -9,6 +9,9 @@ the colour scheme is still `ShadowfetchDark`, with a purple accent.
 | `/usr/share/plymouth/themes/orac/` | Boot splash showing real boot progress, boot messages and the encrypted-drive unlock prompt |
 | `/usr/share/plasma/look-and-feel/org.orac.workstation/` | Global theme, including the KSplash login splash |
 | `/usr/share/wallpapers/Orac{Orb,Minimal,Workstation}/` | Wallpaper sets, one image per resolution |
+| `/usr/share/orac/fastfetch/`, `/usr/bin/orac-terminal-theme` | ORAC terminal banner; `orac-terminal-theme apply` / `revert` per user |
+| `/usr/share/konsole/OracVoid.colorscheme`, `ORAC.profile` | Konsole colours and profile (selectable, not default) |
+| `/usr/share/orac/motd` → `/etc/motd` | Console/SSH login message; Shadowfetch's is kept as `/etc/motd.pre-orac` and restored on removal |
 
 ## Build
 

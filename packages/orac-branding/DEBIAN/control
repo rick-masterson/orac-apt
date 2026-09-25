@@ -1,5 +1,5 @@
 Package: orac-branding
-Version: 1.1.0-1
+Version: 1.2.0-1
 Architecture: all
 Maintainer: Rick Masterson <rickm1982@gmail.com>
 Section: misc
@@ -12,7 +12,8 @@ Description: ORAC workstation branding for Shadowfetch
  encrypted-drive unlock prompt; a Plasma look-and-feel (org.orac.workstation)
  with its KSplash login splash; and the ORAC Orb, Minimal and Workstation
  wallpaper sets; an ORAC terminal banner for fastfetch (orac-terminal-theme
- apply) and an ORAC Void colour scheme and profile for Konsole.
+ apply); an ORAC Void colour scheme and profile for Konsole; and the ORAC
+ login message (/etc/motd), with Shadowfetch's kept and restored on removal.
  .
  Installing registers the boot splash but does not switch to it. Activate it
  with: sudo plymouth-set-default-theme -R orac

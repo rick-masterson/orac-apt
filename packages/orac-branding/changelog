@@ -1,3 +1,18 @@
+orac-branding (1.2.0-1) umbra; urgency=medium
+
+  * Login message: /etc/motd (console and SSH logins) becomes a link to
+    /usr/share/orac/motd, with ORAC as the main feature and Shadowfetch named as
+    the base OS. Only the stock Shadowfetch copy (or an empty/missing motd) is
+    taken over; it is kept as /etc/motd.pre-orac and put back on remove/purge.
+    A hand-edited /etc/motd is left alone.
+  * Stop registering the splash as a default.plymouth alternative, and remove
+    1.0.0's registration on upgrade: with no other candidate it made ORAC the
+    default theme on install. Shadowfetch selects the theme in plymouthd.conf,
+    so plymouth-set-default-theme -R orac is still the one way to activate it.
+  * Maintainer scripts honour DPKG_ROOT (tests run them against a scratch root).
+
+ -- Rick Masterson <rickm1982@gmail.com>  Fri, 25 Sep 2026 03:50:00 +0000
+
 orac-branding (1.1.0-1) umbra; urgency=medium
 
   * Terminal branding. /usr/share/orac/fastfetch/{logo.txt,config.jsonc}: ORAC

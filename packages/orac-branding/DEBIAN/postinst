@@ -1,12 +1,41 @@
 #!/bin/sh
 set -e
+ROOT=${DPKG_ROOT:-}
 THEME=/usr/share/plymouth/themes/orac/orac.plymouth
+MOTD=$ROOT/etc/motd
+ORAC_MOTD=/usr/share/orac/motd
+BACKUP=$ROOT/etc/motd.pre-orac
+STOCK_MOTD=$ROOT/usr/share/shadowfetch/motd
+
+# The login message (/etc/motd, shown on console and SSH logins) is not owned by any package: the
+# installer copied Shadowfetch's into place. Replace it with a link to ORAC's only while it is still
+# that stock copy (or empty); a hand-edited motd belongs to the admin and is left alone.
+take_over_motd() {
+    if [ -L "$MOTD" ] && [ "$(readlink "$MOTD")" = "$ORAC_MOTD" ]; then
+        return 0
+    fi
+    if [ -e "$MOTD" ] || [ -L "$MOTD" ]; then
+        if [ -f "$MOTD" ] && [ ! -L "$MOTD" ] \
+            && { [ ! -s "$MOTD" ] || { [ -f "$STOCK_MOTD" ] && cmp -s "$MOTD" "$STOCK_MOTD"; }; }; then
+            [ -e "$BACKUP" ] || cp -p "$MOTD" "$BACKUP"
+        else
+            echo "orac-branding: /etc/motd has local changes, leaving it; ORAC's message is $ORAC_MOTD" >&2
+            return 0
+        fi
+    fi
+    ln -sfn "$ORAC_MOTD" "$MOTD"
+}
+
 if [ "$1" = configure ]; then
-    # Registered at a low priority: installing must not switch the boot splash.
-    update-alternatives --install /usr/share/plymouth/themes/default.plymouth \
-        default.plymouth "$THEME" 50
+    # 1.0.0 registered the splash as a default.plymouth alternative; with no other candidate that made
+    # it the default, which installing must not do. Shadowfetch selects the theme in plymouthd.conf
+    # (plymouth-set-default-theme), so the alternative was never needed.
+    if update-alternatives --query default.plymouth 2>/dev/null | grep -q "^Alternative: $THEME\$"; then
+        update-alternatives --remove default.plymouth "$THEME"
+    fi
+    take_over_motd
     # If ORAC is already the active splash, the initramfs holds the old copy.
-    if [ -n "$2" ] && command -v plymouth-set-default-theme >/dev/null 2>&1 \
+    if [ -n "$2" ] && [ -z "$ROOT" ] && command -v plymouth-set-default-theme >/dev/null 2>&1 \
         && [ "$(plymouth-set-default-theme)" = orac ] \
         && command -v update-initramfs >/dev/null 2>&1; then
         update-initramfs -u

@@ -111,5 +111,66 @@ class TestTerminalBanner(unittest.TestCase):
             self.assertEqual(cfg.read_text(), "users own banner\n")
 
 
+class TestLoginMessage(unittest.TestCase):
+    """postinst/postrm take over /etc/motd only while it is Shadowfetch's stock copy, and give it back."""
+
+    PKG = ROOT.parent.parent.parent
+    STOCK = "Shadowfetch Linux \"Umbra\"\n"
+
+    def setUp(self):
+        import tempfile
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        (self.root / "etc").mkdir()
+        (self.root / "usr/share/shadowfetch").mkdir(parents=True)
+        (self.root / "usr/share/shadowfetch/motd").write_text(self.STOCK)
+        # Stub the tools the scripts call, so nothing touches the real system.
+        stubs = self.root / "stubs"
+        stubs.mkdir()
+        (stubs / "update-alternatives").write_text("#!/bin/sh\nexit 0\n")
+        (stubs / "update-alternatives").chmod(0o755)
+        self.env = {"DPKG_ROOT": str(self.root), "PATH": f"{stubs}:/usr/bin:/bin"}
+        self.motd = self.root / "etc/motd"
+        self.backup = self.root / "etc/motd.pre-orac"
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def script(self, name, *args):
+        import subprocess
+        subprocess.run(["sh", str(self.PKG / "DEBIAN" / name), *args], env=self.env, check=True,
+                       capture_output=True)
+
+    def test_stock_motd_is_replaced_and_restored_on_remove(self):
+        self.motd.write_text(self.STOCK)
+        self.script("postinst", "configure", "")
+        self.assertEqual(os.readlink(self.motd), "/usr/share/orac/motd")
+        self.assertEqual(self.backup.read_text(), self.STOCK)
+        self.script("postinst", "configure", "1.2.0-1")  # upgrade: idempotent
+        self.assertEqual(self.backup.read_text(), self.STOCK)
+        self.script("postrm", "remove")
+        self.assertFalse(self.motd.is_symlink())
+        self.assertEqual(self.motd.read_text(), self.STOCK)
+        self.assertFalse(self.backup.exists())
+
+    def test_hand_edited_motd_is_left_alone(self):
+        self.motd.write_text("my own message\n")
+        self.script("postinst", "configure", "")
+        self.assertFalse(self.motd.is_symlink())
+        self.assertEqual(self.motd.read_text(), "my own message\n")
+        self.assertFalse(self.backup.exists())
+        self.script("postrm", "remove")
+        self.assertEqual(self.motd.read_text(), "my own message\n")
+
+    def test_missing_motd_is_created_and_removed(self):
+        self.script("postinst", "configure", "")
+        self.assertEqual(os.readlink(self.motd), "/usr/share/orac/motd")
+        self.script("postrm", "purge")
+        self.assertFalse(self.motd.exists() or self.motd.is_symlink())
+
+    def test_orac_motd_ships(self):
+        self.assertIn("ORAC WORKSTATION", (ROOT / "orac" / "motd").read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()
