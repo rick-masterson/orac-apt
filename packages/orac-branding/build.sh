@@ -15,6 +15,7 @@ gzip -9n -c "$here/changelog" > "$stage/usr/share/doc/orac-branding/changelog.De
 find "$stage" -type d -exec chmod 0755 {} +
 find "$stage" -type f -exec chmod 0644 {} +
 chmod 0755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/prerm"
+if [ -d "$stage/usr/bin" ]; then chmod 0755 "$stage"/usr/bin/*; fi
 
 size=$(du -sk --exclude=DEBIAN "$stage" | cut -f1)
 sed -i "/^Architecture:/a Installed-Size: $size" "$stage/DEBIAN/control"

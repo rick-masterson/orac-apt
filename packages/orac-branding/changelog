@@ -1,3 +1,16 @@
+orac-branding (1.1.0-1) umbra; urgency=medium
+
+  * Terminal branding. /usr/share/orac/fastfetch/{logo.txt,config.jsonc}: ORAC
+    block-letter logo in a blue-to-purple gradient with purple keys, replacing
+    the Shadowfetch banner once applied. `orac-terminal-theme apply|revert|status`
+    switches the invoking user's ~/.config/fastfetch/config.jsonc, keeping the
+    first non-ORAC config as config.jsonc.pre-orac. Nothing is written into a
+    home directory by the package itself.
+  * Konsole: OracVoid colour scheme and an ORAC profile (JetBrains Mono),
+    selectable in Konsole; neither is made the default.
+
+ -- Rick Masterson <rickm1982@gmail.com>  Fri, 25 Sep 2026 03:20:00 +0000
+
 orac-branding (1.0.0-1) umbra; urgency=medium
 
   * First package: Plymouth splash, Plasma look-and-feel with KSplash, and

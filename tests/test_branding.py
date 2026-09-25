@@ -79,5 +79,37 @@ class TestSplashQml(unittest.TestCase):
         del app
 
 
+class TestTerminalBanner(unittest.TestCase):
+    """The fastfetch banner and orac-terminal-theme: a user's own config must survive apply/revert."""
+
+    CONFIG = ROOT / "orac" / "fastfetch" / "config.jsonc"
+    TOOL = ROOT.parent / "bin" / "orac-terminal-theme"
+
+    def test_config_points_at_the_packaged_logo(self):
+        import json
+        text = "\n".join(l for l in self.CONFIG.read_text(encoding="utf-8").splitlines()
+                         if not l.lstrip().startswith("//"))
+        logo = Path(json.loads(text)["logo"]["source"])
+        self.assertEqual(logo, Path("/usr/share/orac/fastfetch/logo.txt"))
+        self.assertTrue((ROOT / logo.relative_to("/usr/share")).is_file())
+
+    def test_apply_then_revert_restores_the_users_config(self):
+        import subprocess
+        import tempfile
+        with tempfile.TemporaryDirectory() as home:
+            cfg = Path(home, ".config", "fastfetch", "config.jsonc")
+            cfg.parent.mkdir(parents=True)
+            cfg.write_text("users own banner\n")
+            tool = Path(home, "tool.sh")
+            tool.write_text(re.sub(r"(?m)^src=.*$", f"src={self.CONFIG}", self.TOOL.read_text()))
+            env = {"HOME": home, "PATH": os.environ.get("PATH", "/usr/bin:/bin")}
+            run = lambda *a: subprocess.run(["sh", str(tool), *a], env=env, check=True, capture_output=True)
+            run("apply")
+            self.assertEqual(cfg.read_bytes(), self.CONFIG.read_bytes())
+            run("apply")  # re-applying must not replace the backup with ORAC's own config
+            run("revert")
+            self.assertEqual(cfg.read_text(), "users own banner\n")
+
+
 if __name__ == "__main__":
     unittest.main()

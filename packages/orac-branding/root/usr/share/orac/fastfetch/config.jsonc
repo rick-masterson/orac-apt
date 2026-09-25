@@ -1,0 +1,31 @@
+// ORAC terminal banner for fastfetch. Installed by orac-branding; applied per user with
+// `orac-terminal-theme apply` (copies this to ~/.config/fastfetch/config.jsonc).
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "source": "/usr/share/orac/fastfetch/logo.txt",
+        "type": "file",
+        "padding": { "top": 1, "right": 3 },
+        "color": {
+            "1": "38;2;96;165;250",
+            "2": "38;2;118;153;249",
+            "3": "38;2;140;141;248",
+            "4": "38;2;167;139;250",
+            "5": "38;2;192;132;252",
+            "6": "1;38;2;192;132;252",
+            "7": "38;2;110;100;140"
+        }
+    },
+    "display": {
+        "separator": "  ",
+        "color": { "keys": "38;2;192;132;252", "title": "38;2;96;165;250" }
+    },
+    "modules": [
+        "title", "separator",
+        "os", "kernel", "uptime", "packages", "shell",
+        "display", "de", "wm", "wmtheme", "theme", "icons", "font", "cursor",
+        "terminal", "cpu", "gpu", "memory", "swap", "disk",
+        "break",
+        "colors"
+    ]
+}

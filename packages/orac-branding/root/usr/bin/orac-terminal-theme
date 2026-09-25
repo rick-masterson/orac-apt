@@ -1,0 +1,53 @@
+#!/bin/sh
+# orac-terminal-theme: switch this user's terminal banner (fastfetch) between ORAC and what it was.
+#
+#   orac-terminal-theme apply    back up ~/.config/fastfetch/config.jsonc once, install ORAC's
+#   orac-terminal-theme revert   put the backup back
+#   orac-terminal-theme status   say which banner is active
+#
+# Touches only the invoking user's fastfetch config; never needs root. The banner itself is printed
+# by Shadowfetch's /etc/profile.d/shadowfetch.sh, once per session, so open a new terminal to see it.
+set -eu
+
+src=/usr/share/orac/fastfetch/config.jsonc
+dir=${XDG_CONFIG_HOME:-$HOME/.config}/fastfetch
+cfg=$dir/config.jsonc
+backup=$dir/config.jsonc.pre-orac
+
+is_orac() { [ -f "$cfg" ] && cmp -s "$src" "$cfg"; }
+
+case "${1:-status}" in
+    apply)
+        [ -r "$src" ] || { echo "orac-terminal-theme: $src is missing; is orac-branding installed?" >&2; exit 1; }
+        mkdir -p "$dir"
+        if is_orac; then
+            echo "ORAC banner already active."
+            exit 0
+        fi
+        # Keep the FIRST non-ORAC config: re-applying after a manual edit must not overwrite it.
+        if [ -f "$cfg" ] && [ ! -e "$backup" ]; then
+            cp -p "$cfg" "$backup"
+            echo "Saved your previous banner config to $backup"
+        fi
+        cp "$src" "$cfg"
+        echo "ORAC banner applied. Open a new terminal (or run: fastfetch) to see it."
+        ;;
+    revert)
+        if [ -e "$backup" ]; then
+            mv "$backup" "$cfg"
+            echo "Previous banner restored."
+        elif is_orac; then
+            rm "$cfg"
+            echo "Removed the ORAC banner config; fastfetch is back to its defaults."
+        else
+            echo "Nothing to revert: the ORAC banner is not active."
+        fi
+        ;;
+    status)
+        if is_orac; then echo "ORAC banner is active."; else echo "ORAC banner is not active."; fi
+        ;;
+    *)
+        echo "usage: orac-terminal-theme [apply|revert|status]" >&2
+        exit 2
+        ;;
+esac
