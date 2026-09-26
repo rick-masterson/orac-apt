@@ -15,11 +15,12 @@ import re
 import zipfile
 from pathlib import Path
 
-from PIL import Image, ImageChops
+import numpy as np
+from PIL import Image, ImageChops, ImageFilter
 
 from aether import aether
 
-VERSION = "1.1.0"
+VERSION = "1.2.0"
 HERE = Path(__file__).resolve().parent
 PKG = HERE.parent / "packages" / "orac-branding" / "root" / "usr" / "share"
 OUT = HERE / "dist"
@@ -27,16 +28,19 @@ W, H = 1440, 3200  # 9:20 portrait, QHD+; Android downscales for 1080p phones
 TERMUX_HOME = "/data/data/com.termux/files/home"
 
 # name: (source image, crop box in its pixels, feather share (sides, top, bottom), the orb (x, y, radius) in source
-# pixels, rectangles in source pixels that the aether's lightning must not cross, seed)
+# pixels, rectangles in source pixels that the aether's lightning must not cross, seed, rectangles to erase)
 WALLPAPERS = {
     "orac-orb": ("wallpapers/OracOrb/contents/images/1920x1080.png", (260, 0, 1660, 1080), (0.10, 0.06, 0.06),
-                 (958, 540, 220), [], 7),
+                 (958, 540, 220), [], 7, []),
     "orac-minimal": ("wallpapers/OracMinimal/contents/images/3840x2160.png", (880, 0, 2960, 2160), (0.10, 0.05, 0.05),
-                     (1920, 1090, 350), [], 11),
+                     (1920, 1090, 350), [], 11, []),
     # the centre column: title line, orb and hooded figure; the full-width status bars at the bottom are left out
     "orac-workstation": ("wallpapers/OracWorkstation/contents/images/3840x2160.png", (900, 30, 2940, 1930),
                          (0.10, 0.0, 0.10), (1926, 480, 285),
-                         [(1380, 30, 2480, 130), (1760, 920, 2060, 1180), (1640, 1240, 2220, 1930)], 5),
+                         [(1380, 30, 2480, 130), (1640, 1240, 2220, 1930)], 5,
+                         # the four desktop icons (Projects, Terminal, ORAC-Net, Config): on a phone they would
+                         # look like real, tappable apps, so the wallpaper must not carry them
+                         [(1780, 930, 2060, 1160)]),
 }
 
 
@@ -64,10 +68,48 @@ def to_phone(box, x: float, y: float) -> tuple[float, float]:
     return (x - box[0]) * scale, (y - box[1]) * scale + top
 
 
-def portrait(src: Path, box: tuple[int, int, int, int], feather: tuple[float, float, float]) -> Image.Image:
+def _detail(a: np.ndarray) -> np.ndarray:
+    """High-frequency texture (the background's dot grid and stars): the image minus a blurred copy of itself."""
+    blurred = np.stack([np.asarray(Image.fromarray(np.clip(a[..., c], 0, 255).astype(np.uint8))
+                                   .filter(ImageFilter.GaussianBlur(6)), float) for c in range(3)], -1)
+    return a - blurred
+
+
+def erase(im: Image.Image, rects) -> Image.Image:
+    """Remove each rectangle's contents. The fill is harmonic (the smooth surface that meets the border, found by
+    repeated neighbour averaging), then the background's own texture is laid back on top: the dot grid is copied from
+    beside the rectangle, at the horizontal shift that best lines up the dots just above and below it, so no blank
+    patch shows in the grid."""
+    a = np.asarray(im, float).copy()
+    detail = _detail(a)
+    for x0, y0, x1, y1 in rects:
+        pad = 6
+        region = a[y0 - pad:y1 + pad, x0 - pad:x1 + pad]
+        inside = np.zeros(region.shape[:2], bool)
+        inside[pad:-pad, pad:-pad] = True
+        region[inside] = region[~inside].mean(axis=0)
+        for _ in range(1500):
+            avg = (np.roll(region, 1, 0) + np.roll(region, -1, 0) + np.roll(region, 1, 1) + np.roll(region, -1, 1)) / 4
+            region[inside] = avg[inside]
+        # strips just above and below the hole show where the dots are; find the shift that repeats them best
+        strips = [(y0 - 50, y0 - 5), (y1 + 5, y1 + 50)]
+        width = x1 - x0
+
+        def score(dx: int) -> float:
+            return sum(float((detail[ya:yb, x0:x1] * detail[ya:yb, x0 + dx:x1 + dx]).sum()) for ya, yb in strips)
+        shifts = [dx for dx in range(-2 * width, 2 * width) if abs(dx) > width and 0 <= x0 + dx and x1 + dx <= a.shape[1]]
+        # among the shifts that line the dots up well, take the cleanest patch: no stray stars, frame nodes or smoke
+        aligned = sorted(shifts, key=score, reverse=True)[:max(5, len(shifts) // 12)]
+        dx = min(aligned, key=lambda d: float(np.percentile(np.abs(detail[y0:y1, x0 + d:x1 + d]).max(-1), 99.8)))
+        a[y0:y1, x0:x1] += detail[y0:y1, x0 + dx:x1 + dx]
+    return Image.fromarray(np.clip(a + 0.5, 0, 255).astype(np.uint8))
+
+
+def portrait(src: Path, box: tuple[int, int, int, int], feather: tuple[float, float, float],
+             erase_rects=()) -> Image.Image:
     """Crop the centre of a landscape wallpaper, scale it to the phone's width, and set it on black with the cut
     edges faded out, so the join is invisible (every source has a black background)."""
-    im = Image.open(src).convert("RGB").crop(box)
+    im = erase(Image.open(src).convert("RGB"), erase_rects).crop(box)
     im = im.resize((W, round(im.height * W / im.width)), Image.LANCZOS)
     side, top, bottom = feather
     h_mask = Image.new("L", (W, 1))
@@ -135,11 +177,11 @@ def main() -> None:
     zpath = OUT / f"orac-android-theme-{VERSION}.zip"
     root = f"orac-android-theme-{VERSION}"
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
-        for name, (src, box, feather, (ox, oy, orad), avoid, seed) in WALLPAPERS.items():
+        for name, (src, box, feather, (ox, oy, orad), avoid, seed, erase_rects) in WALLPAPERS.items():
             png = OUT / f"{name}-{W}x{H}.png"
             scale, _ = placement(box)
             rects = [(*to_phone(box, x0, y0), *to_phone(box, x1, y1)) for x0, y0, x1, y1 in avoid]
-            aether(portrait(PKG / src, box, feather), to_phone(box, ox, oy), orad * scale, seed=seed,
+            aether(portrait(PKG / src, box, feather, erase_rects), to_phone(box, ox, oy), orad * scale, seed=seed,
                    avoid=rects, violet_only=name != "orac-orb").save(png, optimize=True)  # only the orb art has blue
             z.write(png, f"{root}/wallpapers/{png.name}")
         z.writestr(f"{root}/termux/colors.properties", termux_colors(PKG / "konsole" / "OracVoid.colorscheme"))
