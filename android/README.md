@@ -1,6 +1,7 @@
 # ORAC theme for Android
 
-Version 1.0.0. Made from the desktop `orac-branding` package, so the phone matches the workstation. Nothing here
+Version 1.1.0. Made from the desktop `orac-branding` package, so the phone matches the workstation, with energy
+drawn from the aether added: lightning, currents of light and sparks converging on each orb. Nothing here
 needs root or an app from an unknown source.
 
 ## Wallpapers
@@ -19,8 +20,8 @@ GitHub releases (the Google Play build is out of date). Then, in Termux:
 ```sh
 termux-setup-storage                 # allow access to Downloads
 pkg install unzip fastfetch
-cd ~ && unzip ~/storage/downloads/orac-android-theme-1.0.0.zip
-sh orac-android-theme-1.0.0/termux/install.sh
+cd ~ && unzip ~/storage/downloads/orac-android-theme-1.1.0.zip
+sh orac-android-theme-1.1.0/termux/install.sh
 ```
 
 Open a new Termux session to see the ORAC banner, and run `fastfetch` for the system banner.

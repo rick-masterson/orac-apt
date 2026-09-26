@@ -2,8 +2,9 @@
 """ORAC theme for Android, built from the desktop package's own files (packages/orac-branding), so the two stay in
 sync. No root and no app install needed:
 
-- wallpapers/: portrait 1440x3200 versions of the ORAC wallpapers (Android scales them to any phone). On Android 12
-  and later, "wallpaper colors" (Material You) then turns the system accents ORAC purple.
+- wallpapers/: portrait 1440x3200 versions of the ORAC wallpapers (Android scales them to any phone), with energy
+  drawn from the aether added by aether.py: lightning, currents of light, haze and sparks converging on each orb. On
+  Android 12 and later, "wallpaper colors" (Material You) then turns the system accents ORAC purple.
 - termux/: the OracVoid terminal colors, the ORAC login banner, and the fastfetch banner, for the Termux app.
 
     python3 android/build.py        # -> android/dist/orac-android-theme-<version>.zip
@@ -16,20 +17,26 @@ from pathlib import Path
 
 from PIL import Image, ImageChops
 
-VERSION = "1.0.0"
+from aether import aether
+
+VERSION = "1.1.0"
 HERE = Path(__file__).resolve().parent
 PKG = HERE.parent / "packages" / "orac-branding" / "root" / "usr" / "share"
 OUT = HERE / "dist"
 W, H = 1440, 3200  # 9:20 portrait, QHD+; Android downscales for 1080p phones
 TERMUX_HOME = "/data/data/com.termux/files/home"
 
-# (source image, crop box in its own pixels, feather as a share of the crop: left/right, top, bottom)
+# name: (source image, crop box in its pixels, feather share (sides, top, bottom), the orb (x, y, radius) in source
+# pixels, rectangles in source pixels that the aether's lightning must not cross, seed)
 WALLPAPERS = {
-    "orac-orb": ("wallpapers/OracOrb/contents/images/1920x1080.png", (260, 0, 1660, 1080), (0.10, 0.06, 0.06)),
-    "orac-minimal": ("wallpapers/OracMinimal/contents/images/3840x2160.png", (880, 0, 2960, 2160), (0.10, 0.05, 0.05)),
+    "orac-orb": ("wallpapers/OracOrb/contents/images/1920x1080.png", (260, 0, 1660, 1080), (0.10, 0.06, 0.06),
+                 (958, 540, 220), [], 7),
+    "orac-minimal": ("wallpapers/OracMinimal/contents/images/3840x2160.png", (880, 0, 2960, 2160), (0.10, 0.05, 0.05),
+                     (1920, 1090, 350), [], 11),
     # the centre column: title line, orb and hooded figure; the full-width status bars at the bottom are left out
     "orac-workstation": ("wallpapers/OracWorkstation/contents/images/3840x2160.png", (900, 30, 2940, 1930),
-                         (0.10, 0.0, 0.10)),
+                         (0.10, 0.0, 0.10), (1926, 480, 285),
+                         [(1380, 30, 2480, 130), (1760, 920, 2060, 1180), (1640, 1240, 2220, 1930)], 5),
 }
 
 
@@ -44,6 +51,17 @@ def _ramp(length: int, lo: int, hi: int) -> list[int]:
             v = min(v, (length - 1 - i) / hi)
         out.append(round(255 * max(0.0, v)))
     return out
+
+
+def placement(box: tuple[int, int, int, int]) -> tuple[float, int]:
+    """(scale, top offset) that portrait() uses to put the crop on the phone canvas."""
+    scale = W / (box[2] - box[0])
+    return scale, (H - round((box[3] - box[1]) * scale)) // 2
+
+
+def to_phone(box, x: float, y: float) -> tuple[float, float]:
+    scale, top = placement(box)
+    return (x - box[0]) * scale, (y - box[1]) * scale + top
 
 
 def portrait(src: Path, box: tuple[int, int, int, int], feather: tuple[float, float, float]) -> Image.Image:
@@ -117,9 +135,12 @@ def main() -> None:
     zpath = OUT / f"orac-android-theme-{VERSION}.zip"
     root = f"orac-android-theme-{VERSION}"
     with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
-        for name, (src, box, feather) in WALLPAPERS.items():
+        for name, (src, box, feather, (ox, oy, orad), avoid, seed) in WALLPAPERS.items():
             png = OUT / f"{name}-{W}x{H}.png"
-            portrait(PKG / src, box, feather).save(png, optimize=True)
+            scale, _ = placement(box)
+            rects = [(*to_phone(box, x0, y0), *to_phone(box, x1, y1)) for x0, y0, x1, y1 in avoid]
+            aether(portrait(PKG / src, box, feather), to_phone(box, ox, oy), orad * scale, seed=seed,
+                   avoid=rects, violet_only=name != "orac-orb").save(png, optimize=True)  # only the orb art has blue
             z.write(png, f"{root}/wallpapers/{png.name}")
         z.writestr(f"{root}/termux/colors.properties", termux_colors(PKG / "konsole" / "OracVoid.colorscheme"))
         z.writestr(f"{root}/termux/motd", termux_motd((PKG / "orac" / "motd").read_text()))
