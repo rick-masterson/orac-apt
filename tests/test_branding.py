@@ -83,6 +83,16 @@ class TestSplashQml(unittest.TestCase):
         del app
 
 
+class TestLookAndFeel(unittest.TestCase):
+    """Plasma 6 finds a look-and-feel only by its metadata.json; metadata.desktop is ignored."""
+
+    def test_metadata_json_names_the_package(self):
+        import json
+        meta = json.loads((SPLASH.parents[2] / "metadata.json").read_text(encoding="utf-8"))
+        self.assertEqual(meta["KPlugin"]["Id"], "org.orac.workstation")
+        self.assertEqual(meta["KPackageStructure"], "Plasma/LookAndFeel")
+
+
 class TestTerminalBanner(unittest.TestCase):
     """The fastfetch banner and orac-terminal-theme: a user's own config must survive apply/revert."""
 

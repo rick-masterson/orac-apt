@@ -1,0 +1,12 @@
+{
+    "KPlugin": {
+        "Authors": [{ "Name": "Rick Masterson" }],
+        "Description": "ORAC look-and-feel on Shadowfetch: void black, blue lightning, purple accent",
+        "Icon": "preferences-desktop-theme",
+        "Id": "org.orac.workstation",
+        "License": "GPL-3.0",
+        "Name": "ORAC Workstation",
+        "Version": "1.0"
+    },
+    "KPackageStructure": "Plasma/LookAndFeel"
+}
