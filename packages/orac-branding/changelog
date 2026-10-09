@@ -1,3 +1,16 @@
+orac-branding (1.3.0-1) umbra; urgency=medium
+
+  * SDDM login theme "orac" (Qt 6, theme API 2.0): void-black ORAC orb background, purple
+    accent, user/session pickers, power buttons, failed-login shake. Original code, no
+    Shadowfetch files. Installing does not select it; add /etc/sddm.conf.d/50-orac.conf
+    with [Theme] Current=orac (see README), which overrides Shadowfetch's umbra.
+  * Pre-login text: /etc/issue and /etc/issue.net are diverted (dpkg-divert, base-files' copies kept
+    as /etc/<f>.shadowfetch) and linked to ORAC's text in /usr/share/orac, which names Shadowfetch
+    as the base. The issue text reads the version from os-release, so it no longer goes stale.
+    Removal undoes the diversion and gives base-files its files back.
+
+ -- Rick Masterson <rickm1982@gmail.com>  Fri, 09 Oct 2026 07:45:00 +0000
+
 orac-branding (1.2.0-1) umbra; urgency=medium
 
   * Login message: /etc/motd (console and SSH logins) becomes a link to

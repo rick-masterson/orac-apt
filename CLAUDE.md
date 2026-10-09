@@ -36,12 +36,15 @@ There are no public source repos, only the website and the APT repo. No Shadowfe
 - Terminal banner: `/etc/profile.d/shadowfetch.sh` (from `shadowfetch-defaults`) runs `fastfetch` once per
   session; the per-user `~/.config/fastfetch/config.jsonc` picks the logo.
 - Login message: `/etc/motd` is an **untracked** copy of `/usr/share/shadowfetch/motd`, and nothing rewrites it.
-  `/etc/issue` belongs to `base-files` (a conffile): leave it alone.
+  `/etc/issue` and `/etc/issue.net` are base-files conffiles, but **orac-branding owns them as of 1.3.0** (decision
+  2026-10-09, user asked for it): they are diverted with `dpkg-divert` (base-files' copies live on as
+  `/etc/<f>.shadowfetch`) and linked to `/usr/share/orac/issue{,.net}`. Do not edit `base-files` itself or
+  `os-release`; change `/usr/share/orac/issue*` instead. Shadowfetch stays named in the text as the base OS.
 - Agent provider system (not used here, but it was the other reading of the first request): declarative
   manifests in `/usr/share/shadowfetch/providers/`, the `approved.json` policy with sha256 pins, and the registry
   in `/usr/lib/shadowfetch/missions/sf_providers.py`.
 
-## orac-branding (current: 1.2.0-1, installed on this machine)
+## orac-branding (current: 1.3.0-1 built, not yet installed; 1.2.0-1 is what runs on this machine)
 
 `packages/orac-branding/`: `root/` is the filesystem tree, `DEBIAN/` holds control and the maintainer scripts,
 `build.sh` uses plain `dpkg-deb`. It ships:
@@ -60,6 +63,10 @@ There are no public source repos, only the website and the APT repo. No Shadowfe
 - Login message: `/etc/motd` becomes a link to `/usr/share/orac/motd`. This happens only while it is the stock
   copy; the original is backed up to `/etc/motd.pre-orac` and restored by `postrm`, and a hand-edited motd is
   left alone.
+- Pre-login text: `/etc/issue` and `/etc/issue.net`, diverted from base-files and linked to ORAC's text (see above);
+  `postrm` removes the link and the diversion. The issue text reads the version from os-release (`\S{PRETTY_NAME}`).
+- SDDM theme `orac` (Qt 6, original code, nothing copied from Shadowfetch's `umbra`). Installing does not select
+  it: `/etc/sddm.conf.d/50-orac.conf` with `[Theme] Current=orac` does, and overrides `10-shadowfetch.conf`.
 - Maintainer scripts honour `DPKG_ROOT`, and the tests run them against a scratch root.
 
 State on this machine: 1.2.0-1 is installed from this repo, `Theme=orac`, the motd link is in place and the

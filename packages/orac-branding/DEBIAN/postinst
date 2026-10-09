@@ -26,6 +26,22 @@ take_over_motd() {
     ln -sfn "$ORAC_MOTD" "$MOTD"
 }
 
+# /etc/issue and /etc/issue.net (pre-login text) are conffiles of base-files. Divert them so base-files
+# upgrades write to /etc/<f>.shadowfetch instead of over ORAC's text, and link ORAC's in their place.
+take_over_issue() {
+    for f in issue issue.net; do
+        owner=$(dpkg-divert --listpackage "/etc/$f" 2>/dev/null || true)
+        if [ -z "$owner" ]; then
+            dpkg-divert --package orac-branding --quiet --rename --divert "/etc/$f.shadowfetch" --add "/etc/$f" \
+                || { echo "orac-branding: cannot divert /etc/$f, leaving it" >&2; continue; }
+        elif [ "$owner" != orac-branding ]; then
+            echo "orac-branding: /etc/$f is diverted by $owner, leaving it" >&2
+            continue
+        fi
+        ln -sfn "/usr/share/orac/$f" "$ROOT/etc/$f"
+    done
+}
+
 if [ "$1" = configure ]; then
     # 1.0.0 registered the splash as a default.plymouth alternative; with no other candidate that made
     # it the default, which installing must not do. Shadowfetch selects the theme in plymouthd.conf
@@ -34,6 +50,7 @@ if [ "$1" = configure ]; then
         update-alternatives --remove default.plymouth "$THEME"
     fi
     take_over_motd
+    take_over_issue
     # If ORAC is already the active splash, the initramfs holds the old copy.
     if [ -n "$2" ] && [ -z "$ROOT" ] && command -v plymouth-set-default-theme >/dev/null 2>&1 \
         && [ "$(plymouth-set-default-theme)" = orac ] \

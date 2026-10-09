@@ -8,10 +8,12 @@ the colour scheme is still `ShadowfetchDark`, with a purple accent.
 |---|---|
 | `/usr/share/plymouth/themes/orac/` | Boot splash showing real boot progress, boot messages and the encrypted-drive unlock prompt |
 | `/usr/share/plasma/look-and-feel/org.orac.workstation/` | Global theme, including the KSplash login splash |
+| `/usr/share/sddm/themes/orac/` | SDDM login theme (replaces Shadowfetch's `umbra` once selected) |
 | `/usr/share/wallpapers/Orac{Orb,Minimal,Workstation}/` | Wallpaper sets, one image per resolution |
 | `/usr/share/orac/fastfetch/`, `/usr/bin/orac-terminal-theme` | ORAC terminal banner; `orac-terminal-theme apply` / `revert` per user |
 | `/usr/share/konsole/OracVoid.colorscheme`, `ORAC.profile` | Konsole colours and profile (selectable, not default) |
 | `/usr/share/orac/motd` → `/etc/motd` | Console/SSH login message; Shadowfetch's is kept as `/etc/motd.pre-orac` and restored on removal |
+| `/usr/share/orac/issue{,.net}` → `/etc/issue{,.net}` | Pre-login text (console, SSH banner); diverted from base-files, originals kept as `/etc/issue*.shadowfetch` and restored on removal |
 
 ## Build
 
@@ -30,6 +32,12 @@ rebuilds the initramfs):
 ```bash
 sudo plymouth-set-default-theme -R orac
 ```
+To use the login theme, in place of `umbra` (a later drop-in overrides Shadowfetch's `10-shadowfetch.conf`):
+```bash
+printf '[Theme]\nCurrent=orac\n' | sudo tee /etc/sddm.conf.d/50-orac.conf
+```
+Preview without logging out: `sddm-greeter-qt6 --test-mode --theme /usr/share/sddm/themes/orac`.
+To go back to umbra, delete that file.
 To use the global theme, go to System Settings → Colors & Themes → Global Theme → **ORAC Workstation**.
 To use just the login splash, go to Splash Screen → **ORAC Workstation**.
 

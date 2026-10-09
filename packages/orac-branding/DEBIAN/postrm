@@ -14,4 +14,14 @@ if [ "$1" = remove ] || [ "$1" = purge ]; then
         fi
     fi
 fi
+
+# Give /etc/issue and /etc/issue.net back to base-files: drop ORAC's link, then undo the diversion.
+if [ "$1" = remove ] || [ "$1" = purge ]; then
+    for f in issue issue.net; do
+        if [ "$(dpkg-divert --listpackage "/etc/$f" 2>/dev/null || true)" = orac-branding ]; then
+            if [ -L "$ROOT/etc/$f" ]; then rm -f "$ROOT/etc/$f"; fi
+            dpkg-divert --package orac-branding --quiet --rename --remove "/etc/$f"
+        fi
+    done
+fi
 exit 0

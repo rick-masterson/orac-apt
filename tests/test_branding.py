@@ -83,6 +83,21 @@ class TestSplashQml(unittest.TestCase):
         del app
 
 
+class TestSddmTheme(unittest.TestCase):
+    DIR = ROOT / "sddm" / "themes" / "orac"
+
+    def test_metadata_points_at_shipped_files(self):
+        meta = dict(l.split("=", 1) for l in (self.DIR / "metadata.desktop").read_text().splitlines() if "=" in l)
+        for key in ("MainScript", "ConfigFile"):
+            self.assertTrue((self.DIR / meta[key]).is_file(), key)
+        self.assertEqual(meta["Theme-Id"], "orac")
+        self.assertEqual(meta["QtVersion"], "6")
+
+    def test_background_ships(self):
+        conf = (self.DIR / "theme.conf").read_text()
+        self.assertTrue((self.DIR / re.search(r"(?m)^background=(.+)$", conf).group(1)).is_file())
+
+
 class TestTerminalBanner(unittest.TestCase):
     """The fastfetch banner and orac-terminal-theme: a user's own config must survive apply/revert."""
 
@@ -126,6 +141,7 @@ class TestLoginMessage(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory()
         self.root = Path(self._tmp.name)
         (self.root / "etc").mkdir()
+        (self.root / "var/lib/dpkg/updates").mkdir(parents=True)
         (self.root / "usr/share/shadowfetch").mkdir(parents=True)
         (self.root / "usr/share/shadowfetch/motd").write_text(self.STOCK)
         # Stub the tools the scripts call, so nothing touches the real system.
@@ -171,6 +187,25 @@ class TestLoginMessage(unittest.TestCase):
         self.assertEqual(os.readlink(self.motd), "/usr/share/orac/motd")
         self.script("postrm", "purge")
         self.assertFalse(self.motd.exists() or self.motd.is_symlink())
+
+    def test_issue_is_diverted_then_restored(self):
+        stock = "Shadowfetch Linux 5.0.0 \\n \\l\n"
+        for f in ("issue", "issue.net"):
+            (self.root / "etc" / f).write_text(stock)
+        self.script("postinst", "configure", "")
+        self.script("postinst", "configure", "1.2.0-1")  # idempotent
+        for f in ("issue", "issue.net"):
+            self.assertEqual(os.readlink(self.root / "etc" / f), f"/usr/share/orac/{f}")
+            self.assertEqual((self.root / "etc" / f"{f}.shadowfetch").read_text(), stock)
+        self.script("postrm", "remove")
+        for f in ("issue", "issue.net"):
+            self.assertFalse((self.root / "etc" / f).is_symlink())
+            self.assertEqual((self.root / "etc" / f).read_text(), stock)
+            self.assertFalse((self.root / "etc" / f"{f}.shadowfetch").exists())
+
+    def test_issue_text_names_both_orac_and_shadowfetch(self):
+        self.assertIn("ORAC", (ROOT / "orac" / "issue").read_text())
+        self.assertIn("Shadowfetch", (ROOT / "orac" / "issue.net").read_text())
 
     def test_orac_motd_ships(self):
         self.assertIn("ORAC WORKSTATION", (ROOT / "orac" / "motd").read_text(encoding="utf-8"))
