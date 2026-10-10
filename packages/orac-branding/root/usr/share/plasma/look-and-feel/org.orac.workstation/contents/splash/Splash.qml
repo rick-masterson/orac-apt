@@ -24,6 +24,7 @@ Rectangle {
         fillMode: VideoOutput.PreserveAspectCrop
         muted: true
         autoPlay: true
+        endOfStreamPolicy: VideoOutput.KeepLastFrame
     }
 
     // Vignette toward the bottom. Qt colours are #AARRGGBB.
