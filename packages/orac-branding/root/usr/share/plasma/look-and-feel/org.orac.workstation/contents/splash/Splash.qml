@@ -1,8 +1,10 @@
 import QtQuick 2.15
-import QtQuick.Controls 2.15 as QQC2
+import QtMultimedia
 
-// ORAC login splash. KSplash sets `stage` on the root object as the session
-// comes up (1..6); dots before the current stage are solid, the rest pulse.
+// ORAC login splash. The ORAC core video plays once over the still picture
+// (which stays as the fallback if the video cannot play). KSplash sets `stage`
+// on the root object as the session comes up (1..6), and a slim gradient bar
+// fills with it: the one status indicator.
 Rectangle {
     id: root
     color: "#000000"
@@ -16,6 +18,14 @@ Rectangle {
         smooth: true
     }
 
+    Video {
+        anchors.fill: parent
+        source: Qt.resolvedUrl("images/orac-core.webm")
+        fillMode: VideoOutput.PreserveAspectCrop
+        muted: true
+        autoPlay: true
+    }
+
     // Vignette toward the bottom. Qt colours are #AARRGGBB.
     Rectangle {
         anchors.fill: parent
@@ -25,59 +35,36 @@ Rectangle {
         }
     }
 
-    // Breathing glow over the orb.
-    Rectangle {
-        width: parent.height * 0.42
-        height: width
-        radius: width / 2
-        anchors.centerIn: parent
-        color: "#b266ff"
-        opacity: 0.08
-        SequentialAnimation on opacity {
-            loops: Animation.Infinite
-            NumberAnimation { to: 0.18; duration: 1200; easing.type: Easing.InOutQuad }
-            NumberAnimation { to: 0.08; duration: 1200; easing.type: Easing.InOutQuad }
-        }
-        SequentialAnimation on scale {
-            loops: Animation.Infinite
-            NumberAnimation { to: 1.08; duration: 2400; easing.type: Easing.InOutQuad }
-            NumberAnimation { to: 1.0; duration: 2400; easing.type: Easing.InOutQuad }
-        }
-    }
-
-    Row {
+    // The web dashboard's gradient "orac" wordmark.
+    Image {
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 180
-        spacing: 14
-
-        Repeater {
-            model: 5
-            Rectangle {
-                id: dot
-                width: 10; height: 10
-                radius: 5
-                color: "#c084fc"
-                property real pulse: 0.25
-                opacity: index < root.stage - 1 ? 1.0 : pulse
-
-                SequentialAnimation on pulse {
-                    loops: Animation.Infinite
-                    PauseAnimation { duration: index * 150 }
-                    NumberAnimation { to: 1.0; duration: 400 }
-                    NumberAnimation { to: 0.25; duration: 600 }
-                }
-            }
-        }
+        anchors.bottom: track.top
+        anchors.bottomMargin: 18
+        source: "images/wordmark.png"
+        smooth: true
     }
 
-    QQC2.BusyIndicator {
+    Rectangle {
+        id: track
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 120
-        width: 48; height: 48
-        running: true
-        palette.text: "#c084fc"
+        width: 220; height: 4
+        radius: 2
+        color: "#2e2440"
+
+        Rectangle {
+            height: parent.height
+            radius: 2
+            width: parent.width * Math.min(1, Math.max(0, root.stage) / 6)
+            Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+            gradient: Gradient {
+                orientation: Gradient.Horizontal
+                GradientStop { position: 0.0; color: "#ff7a2f" }
+                GradientStop { position: 0.5; color: "#e0508a" }
+                GradientStop { position: 1.0; color: "#8b5cf6" }
+            }
+        }
     }
 
     Text {

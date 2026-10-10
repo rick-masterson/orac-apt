@@ -1,3 +1,21 @@
+orac-branding (1.3.3-1) umbra; urgency=medium
+
+  * One status indicator per splash. Plymouth keeps the slim progress bar (it
+    tracks real boot progress) and drops the pulsing dots; the bar hides
+    under the drive-unlock prompt. The KDE login splash drops its dots and
+    spinner for the same slim gradient bar, filled by the KSplash stage.
+  * KDE login splash: the ORAC core video from the web dashboard plays once,
+    muted, over the still picture, which stays as the fallback. Needs
+    qml6-module-qtmultimedia, already in Recommends.
+  * Both splashes show the web dashboard's wordmark: lowercase "orac" in
+    Inter Bold, tight tracking, orange-pink-purple gradient. Plymouth cannot
+    draw gradient text, so tools/build_wordmark.py pre-renders wordmark.png.
+  * Terminal banner: the ORAC letters take the Orac gradient, one colour per
+    letter (orange, coral, pink, purple), with "ORAC WORKSTATION" and "on
+    SHADOWFETCH LINUX // NEURAL CORE ONLINE" beneath; keys are orange.
+
+ -- Rick Masterson <rickm1982@gmail.com>  Sat, 10 Oct 2026 22:00:00 +0000
+
 orac-branding (1.3.2-1) umbra; urgency=medium
 
   * Boot splash: the GRUB background (the ORAC core over black) now fills the

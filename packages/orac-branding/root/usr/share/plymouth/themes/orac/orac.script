@@ -1,6 +1,6 @@
 # ORAC Plymouth boot splash.
-# The GRUB picture full screen, with a compact column under the core: wordmark,
-# pulsing status dots and a slim gradient progress bar.
+# The GRUB picture full screen, with a compact column under the core: wordmark
+# and a slim gradient progress bar (the one status indicator).
 #
 # Only calls that exist in Plymouth's script plugin: a Sprite cannot be scaled
 # (the Image is scaled and re-set instead), there is no Plymouth.GetTime (the
@@ -27,30 +27,18 @@ bg.sprite = Sprite(bg.image);
 bg.sprite.SetPosition(screen.x + screen.w / 2 - bg.image.GetWidth() / 2,
                       screen.y + screen.h / 2 - bg.image.GetHeight() / 2, -10);
 
-# --- Wordmark (#ece6f3) ---
-brand.image = Image.Text("O R A C", 0.93, 0.90, 0.95, 1, "Sans Bold 13");
+# --- Wordmark: the web dashboard's gradient "orac", pre-rendered by
+# tools/build_wordmark.py (Plymouth cannot draw gradient text) ---
+brand.image = Image("wordmark.png");
 # The core is about 420 px tall in the 1080 px picture; start just below it.
 brand.y = screen.y + screen.h / 2 + 290 * bg.scale;
 brand.sprite = Sprite(brand.image);
 brand.sprite.SetPosition(screen.x + screen.w / 2 - brand.image.GetWidth() / 2, brand.y, 12);
 
-# --- Status dots: solid once boot passes them, pulsing ahead of it ---
-dot_count = 5;
-dot_gap = 12;
-dot_image = Image("dot.png").Scale(12, 12);
-dot_size = 12;
-dots_x0 = screen.x + screen.w / 2 - (dot_count * dot_size + (dot_count - 1) * dot_gap) / 2;
-dots_y = brand.y + brand.image.GetHeight() + 14;
-for (i = 0; i < dot_count; i++) {
-    dots[i].sprite = Sprite(dot_image);
-    dots[i].sprite.SetPosition(dots_x0 + i * (dot_size + dot_gap), dots_y, 12);
-    dots[i].sprite.SetOpacity(0.25);
-}
-
 # --- Slim progress track and bar ---
 box.image = Image("slimbox.png");
 box.x = screen.x + screen.w / 2 - box.image.GetWidth() / 2;
-box.y = dots_y + dot_size + 18;
+box.y = brand.y + brand.image.GetHeight() + 16;
 box.sprite = Sprite(box.image);
 box.sprite.SetPosition(box.x, box.y, 10);
 
@@ -66,8 +54,6 @@ message.sprite = Sprite();
 message.y = box.y + box.image.GetHeight() + 14;
 
 state.progress = 0;
-state.tick = 0;
-state.spinner = 1;
 
 fun boot_progress_callback(duration, progress) {
     if (progress < 0) progress = 0;
@@ -77,24 +63,6 @@ fun boot_progress_callback(duration, progress) {
     if (width > 0 && width != bar.shown) {
         bar.shown = width;
         bar.sprite.SetImage(bar.source.Scale(width, bar.source.GetHeight()));
-    }
-}
-
-fun refresh_callback() {
-    if (state.spinner) {
-        state.tick++;
-        lit = Math.Int(state.progress * dot_count);
-        for (i = 0; i < dot_count; i++) {
-            if (i < lit) {
-                dots[i].sprite.SetOpacity(1);
-            } else {
-                # Triangle wave, 60 ticks per cycle, staggered per dot.
-                phase = (state.tick + (dot_count - i) * 12) % 60;
-                level = phase / 30;
-                if (phase >= 30) level = (60 - phase) / 30;
-                dots[i].sprite.SetOpacity(0.25 + 0.75 * level);
-            }
-        }
     }
 }
 
@@ -115,16 +83,15 @@ fun hide_message_callback(text) {
 }
 
 Plymouth.SetBootProgressFunction(boot_progress_callback);
-Plymouth.SetRefreshFunction(refresh_callback);
 Plymouth.SetSystemUpdateFunction(system_update_callback);
 Plymouth.SetDisplayMessageFunction(display_message_callback);
 Plymouth.SetHideMessageFunction(hide_message_callback);
 
-# --- Encrypted-drive unlock: replaces the wordmark and dots while shown ---
+# --- Encrypted-drive unlock: replaces the wordmark while shown ---
 password.title.image = Image.Text("UNLOCK ENCRYPTED DRIVE", 0.75, 0.52, 0.99, 1, "Sans Bold 13");
 password.title.sprite = Sprite(password.title.image);
 password.title.sprite.SetPosition(screen.x + screen.w / 2 - password.title.image.GetWidth() / 2,
-                                  dots_y - password.title.image.GetHeight() - 20, 20);
+                                  brand.y, 20);
 password.title.sprite.SetOpacity(0);
 
 password.bullet_image = Image("bullet.png");
@@ -133,11 +100,9 @@ password.bullet_gap = 6;
 password.max_bullets = 32;
 
 fun set_spinner_visible(visible) {
-    state.spinner = visible;
     brand.sprite.SetOpacity(visible);
-    for (i = 0; i < dot_count; i++) {
-        dots[i].sprite.SetOpacity(visible * 0.25);
-    }
+    box.sprite.SetOpacity(visible);
+    bar.sprite.SetOpacity(visible);
 }
 
 fun show_password_dialogue() {
@@ -152,7 +117,7 @@ fun display_password_callback(prompt, bullets) {
     x0 = screen.x + screen.w / 2 - (bullets * step - password.bullet_gap) / 2;
     for (index = 0; password.bullets[index] || index < bullets; index++) {
         if (!password.bullets[index]) password.bullets[index].sprite = Sprite(password.bullet_image);
-        password.bullets[index].sprite.SetPosition(x0 + index * step, dots_y, 20);
+        password.bullets[index].sprite.SetPosition(x0 + index * step, brand.y + password.title.image.GetHeight() + 14, 20);
         password.bullets[index].sprite.SetOpacity(0);
         if (index < bullets) password.bullets[index].sprite.SetOpacity(1);
     }
