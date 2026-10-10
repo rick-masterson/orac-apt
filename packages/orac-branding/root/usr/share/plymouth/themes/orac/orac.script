@@ -1,5 +1,6 @@
 # ORAC Plymouth boot splash.
-# Void black, blue lightning orb, purple progress bar, pulsing status dots.
+# Black, with a compact centred column: the ORAC core emblem, wordmark,
+# pulsing status dots and a slim gradient progress bar.
 #
 # Only calls that exist in Plymouth's script plugin: a Sprite cannot be scaled
 # (the Image is scaled and re-set instead), there is no Plymouth.GetTime (the
@@ -15,51 +16,51 @@ screen.h = Window.GetHeight();
 screen.x = Window.GetX();
 screen.y = Window.GetY();
 
-# --- Background: scaled once to cover the screen, centred ---
-bg.image = Image("background.png");
-bg.scale = Math.Max(screen.w / bg.image.GetWidth(), screen.h / bg.image.GetHeight());
-bg.w = Math.Int(bg.image.GetWidth() * bg.scale + 0.5);
-bg.h = Math.Int(bg.image.GetHeight() * bg.scale + 0.5);
-bg.image = bg.image.Scale(bg.w, bg.h);
-bg.sprite = Sprite(bg.image);
-bg.sprite.SetPosition(screen.x + (screen.w - bg.w) / 2, screen.y + (screen.h - bg.h) / 2, -10);
+# --- Layout: a compact column at the centre, top to bottom: emblem, wordmark,
+# status dots, slim progress bar, boot message. Nothing is scaled to the
+# screen, so it stays tight on any resolution. ---
+emblem.image = Image("emblem.png");
+emblem.x = screen.x + screen.w / 2 - emblem.image.GetWidth() / 2;
+emblem.y = screen.y + screen.h * 0.44 - emblem.image.GetHeight() / 2;
+emblem.sprite = Sprite(emblem.image);
+emblem.sprite.SetPosition(emblem.x, emblem.y, 5);
 
-# --- Progress box and bar ---
-box.image = Image("box.png");
-box.x = screen.x + screen.w / 2 - box.image.GetWidth() / 2;
-box.y = screen.y + screen.h * 0.84;
-box.sprite = Sprite(box.image);
-box.sprite.SetPosition(box.x, box.y, 10);
-
-bar.source = Image("bar.png");
-bar.x = box.x + (box.image.GetWidth() - bar.source.GetWidth()) / 2;
-bar.y = box.y + (box.image.GetHeight() - bar.source.GetHeight()) / 2;
-bar.sprite = Sprite();
-bar.sprite.SetPosition(bar.x, bar.y, 11);
-bar.shown = 0;
+# --- Wordmark (#ece6f3) ---
+brand.image = Image.Text("O R A C", 0.93, 0.90, 0.95, 1, "Sans Bold 13");
+brand.y = emblem.y + emblem.image.GetHeight() + 14;
+brand.sprite = Sprite(brand.image);
+brand.sprite.SetPosition(screen.x + screen.w / 2 - brand.image.GetWidth() / 2, brand.y, 12);
 
 # --- Status dots: solid once boot passes them, pulsing ahead of it ---
 dot_count = 5;
-dot_gap = 18;
-dot_image = Image("dot.png");
-dot_size = dot_image.GetWidth();
+dot_gap = 12;
+dot_image = Image("dot.png").Scale(12, 12);
+dot_size = 12;
 dots_x0 = screen.x + screen.w / 2 - (dot_count * dot_size + (dot_count - 1) * dot_gap) / 2;
-dots_y = box.y - dot_size - 24;
+dots_y = brand.y + brand.image.GetHeight() + 14;
 for (i = 0; i < dot_count; i++) {
     dots[i].sprite = Sprite(dot_image);
     dots[i].sprite.SetPosition(dots_x0 + i * (dot_size + dot_gap), dots_y, 12);
     dots[i].sprite.SetOpacity(0.25);
 }
 
-# --- Wordmark (#c084fc) ---
-brand.image = Image.Text("O R A C", 0.75, 0.52, 0.99, 1, "Sans Bold 14");
-brand.sprite = Sprite(brand.image);
-brand.sprite.SetPosition(screen.x + screen.w / 2 - brand.image.GetWidth() / 2,
-                         dots_y - brand.image.GetHeight() - 20, 12);
+# --- Slim progress track and bar ---
+box.image = Image("slimbox.png");
+box.x = screen.x + screen.w / 2 - box.image.GetWidth() / 2;
+box.y = dots_y + dot_size + 18;
+box.sprite = Sprite(box.image);
+box.sprite.SetPosition(box.x, box.y, 10);
+
+bar.source = Image("slimbar.png");
+bar.x = box.x + (box.image.GetWidth() - bar.source.GetWidth()) / 2;
+bar.y = box.y + (box.image.GetHeight() - bar.source.GetHeight()) / 2;
+bar.sprite = Sprite();
+bar.sprite.SetPosition(bar.x, bar.y, 11);
+bar.shown = 0;
 
 # --- Boot message line, under the bar (#99c7ff) ---
 message.sprite = Sprite();
-message.y = box.y + box.image.GetHeight() + 18;
+message.y = box.y + box.image.GetHeight() + 14;
 
 state.progress = 0;
 state.tick = 0;
@@ -100,7 +101,7 @@ fun system_update_callback(progress) {
 }
 
 fun display_message_callback(text) {
-    message.image = Image.Text(text, 0.60, 0.78, 1.0, 1, "Sans 11");
+    message.image = Image.Text(text, 0.60, 0.56, 0.67, 1, "Sans 10");
     message.sprite.SetImage(message.image);
     message.sprite.SetPosition(screen.x + screen.w / 2 - message.image.GetWidth() / 2, message.y, 20);
     message.sprite.SetOpacity(1);

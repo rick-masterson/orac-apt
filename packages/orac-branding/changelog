@@ -1,3 +1,14 @@
+orac-branding (1.3.1-1) umbra; urgency=medium
+
+  * Boot splash: a compact centred column like Shadowfetch's, instead of the
+    full-screen picture and wide bar. A 320 px ORAC core emblem fading into
+    black, the wordmark, smaller status dots and a slim 220 px gradient
+    progress bar, with the boot message beneath. Nothing is scaled to the
+    screen, so it stays tight at any resolution. The unused full-screen
+    background and wide bar images are dropped.
+
+ -- Rick Masterson <rickm1982@gmail.com>  Sat, 10 Oct 2026 18:20:00 +0000
+
 orac-branding (1.3.0-1) umbra; urgency=medium
 
   * Boot to desktop in ORAC. New orac-boot-theme apply|revert|status (root)
