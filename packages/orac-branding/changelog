@@ -1,3 +1,11 @@
+orac-branding (1.3.6-1) umbra; urgency=medium
+
+  * KDE login splash video now ends at 4.5 s, on the close-up of the
+    plasma, before the camera pulls back and the edges of the box show;
+    the last frame is held for 1 s (5.5 s in all).
+
+ -- Rick Masterson <rickm1982@gmail.com>  Sat, 10 Oct 2026 14:54:45 -0400
+
 orac-branding (1.3.5-1) umbra; urgency=medium
 
   * KDE login splash video graded to the living wallpaper: blue-violet

@@ -41,7 +41,7 @@ There are no public source repos, only the website and the APT repo. No Shadowfe
   manifests in `/usr/share/shadowfetch/providers/`, the `approved.json` policy with sha256 pins, and the registry
   in `/usr/lib/shadowfetch/missions/sf_providers.py`.
 
-## orac-branding (current: 1.3.5-1)
+## orac-branding (current: 1.3.6-1)
 
 `packages/orac-branding/`: `root/` is the filesystem tree, `DEBIAN/` holds control and the maintainer scripts,
 `build.sh` uses plain `dpkg-deb`. It ships:
