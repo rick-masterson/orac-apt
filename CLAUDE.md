@@ -14,7 +14,7 @@ asking.
 
 ## Decision: remix, not distro (2026-09-24)
 
-The machine runs **Shadowfetch Linux 4.1.0 "Umbra"**, a Debian-testing-based KDE Plasma 6 distro. The user
+The machine runs **Shadowfetch Linux 5.0.1 "Umbra"** (the tty banner `/etc/issue` still said 4.1.0 until 2026-10-10), a Debian-testing-based KDE Plasma 6 distro. The user
 wanted their own update channel on GitHub, but doesn't have the capacity to maintain a full distro. So this
 repo is an **add-on repo layered on Shadowfetch**:
 - Shadowfetch keeps supplying the base system and its own updates (`/etc/apt/sources.list.d/shadowfetch.sources`).
