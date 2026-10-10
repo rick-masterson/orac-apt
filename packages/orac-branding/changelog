@@ -1,3 +1,27 @@
+orac-branding (1.3.0-1) umbra; urgency=medium
+
+  * Boot to desktop in ORAC. New orac-boot-theme apply|revert|status (root)
+    switches the boot menu, boot splash and login screen together. GRUB and
+    SDDM are switched with 99-orac drop-ins that load after Shadowfetch's
+    10-shadowfetch ones, so Shadowfetch updates don't undo them; the Plymouth
+    theme in use before is remembered and restored by revert. Removing the
+    package reverts first.
+  * GRUB theme orac: the ORAC core cropped to the screen, Inter and
+    JetBrains Mono fonts (pf2, built with grub-mkfont), Orac palette.
+  * SDDM theme orac (Qt 6): the ORAC core video looping behind a frosted
+    glass panel, as on the ORAC web console's unlock screen.
+  * Orac cursor theme: Breeze cursors with the Orac gradient outline, as SVG
+    (Wayland) and Xcursor (X11). Rebuild with tools/build_cursors.py.
+  * Plasma style orac: Breeze Dark with Orac colours, for the panel and
+    widgets only; application colours are unchanged.
+  * Orac Living Core wallpaper (org.orac.living): the ORAC core split into
+    depth layers with a parallax drift, a breathing orb and glow, and
+    flickering lightning.
+  * Correction to 1.0.0's entry: Plymouth.SetMessageFunction does exist; it
+    is an alias of SetDisplayMessageFunction (script-lib-plymouth.script).
+
+ -- Rick Masterson <rickm1982@gmail.com>  Sat, 10 Oct 2026 17:30:00 +0000
+
 orac-branding (1.2.1-1) umbra; urgency=medium
 
   * Global theme: ship metadata.json instead of metadata.desktop. Plasma 6 only

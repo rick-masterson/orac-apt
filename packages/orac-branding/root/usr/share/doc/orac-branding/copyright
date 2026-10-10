@@ -6,3 +6,32 @@ Copyright: 2026 Rick Masterson
 License: GPL-3.0+
  On Debian systems the full text of the GNU General Public License version 3
  is in /usr/share/common-licenses/GPL-3.
+
+Files: usr/share/icons/Orac/*
+Copyright: 2014 Uri Herrera and others (KDE Breeze cursors)
+           2026 Rick Masterson (ORAC recolouring)
+License: LGPL-3.0+
+ Recoloured from KDE's Breeze cursors (breeze-cursor-theme).
+ On Debian systems the full text of the GNU Lesser General Public License
+ version 3 is in /usr/share/common-licenses/LGPL-3.
+
+Files: usr/share/plasma/desktoptheme/orac/*
+Copyright: 2006-2007 Aaron Seigo and the KDE Visual Design Group (Breeze Dark)
+           2026 Rick Masterson (ORAC colours)
+License: LGPL-2.0+
+ Based on the Breeze Dark Plasma style (plasma-desktoptheme).
+ On Debian systems the full text of the GNU Library General Public License
+ version 2 is in /usr/share/common-licenses/LGPL-2.
+
+Files: usr/share/grub/themes/orac/inter-*.pf2
+Copyright: 2016-2024 The Inter Project Authors
+License: OFL-1.1
+ Inter, converted to GRUB's font format with grub-mkfont. SIL Open Font
+ License 1.1: https://openfontlicense.org
+
+Files: usr/share/grub/themes/orac/jetbrains-mono-*.pf2
+Copyright: 2020 JetBrains s.r.o.
+License: Apache-2.0
+ JetBrains Mono, converted to GRUB's font format with grub-mkfont.
+ On Debian systems the full text of the Apache License 2.0 is in
+ /usr/share/common-licenses/Apache-2.0.

@@ -41,15 +41,15 @@ There are no public source repos, only the website and the APT repo. No Shadowfe
   manifests in `/usr/share/shadowfetch/providers/`, the `approved.json` policy with sha256 pins, and the registry
   in `/usr/lib/shadowfetch/missions/sf_providers.py`.
 
-## orac-branding (current: 1.2.0-1, installed on this machine)
+## orac-branding (current: 1.3.0-1)
 
 `packages/orac-branding/`: `root/` is the filesystem tree, `DEBIAN/` holds control and the maintainer scripts,
 `build.sh` uses plain `dpkg-deb`. It ships:
 - Plymouth theme `orac`. The script was rewritten against the real script-plugin API: the original zip used
   `Sprite.SetScale` and `Plymouth.GetTime` (neither exists), and its password sprites were function locals that
   vanish. **Correction (2026-09-25):** the 1.0.0 changelog also calls `Plymouth.SetMessageFunction` nonexistent.
-  It is a valid alias of `SetDisplayMessageFunction` (Plymouth's `script-lib-plymouth.script`). Say so in the next
-  release's changelog entry. To check any Plymouth theme, use the `plymouth-theme` skill's checker in
+  It is a valid alias of `SetDisplayMessageFunction` (Plymouth's `script-lib-plymouth.script`). Recorded in
+  1.3.0's changelog entry. To check any Plymouth theme, use the `plymouth-theme` skill's checker in
   `rick-masterson/Claude` (`plugins/desktop-theming`), which reads its API lists from Plymouth's source.
 - Plasma look-and-feel `org.orac.workstation` with a KSplash, on `ShadowfetchDark` plus a purple accent. The
   original QML's bare `letterSpacing` made it fail to load.
@@ -61,9 +61,25 @@ There are no public source repos, only the website and the APT repo. No Shadowfe
   copy; the original is backed up to `/etc/motd.pre-orac` and restored by `postrm`, and a hand-edited motd is
   left alone.
 - Maintainer scripts honour `DPKG_ROOT`, and the tests run them against a scratch root.
+- Boot to desktop (1.3.0): `orac-boot-theme apply|revert|status` (`/usr/sbin`, root) switches GRUB, Plymouth and
+  SDDM together. GRUB and SDDM use drop-ins `/etc/default/grub.d/99-orac.cfg` and `/etc/sddm.conf.d/99-orac.conf`,
+  which load after Shadowfetch's `10-shadowfetch` ones, so Shadowfetch updates don't undo them. The Plymouth theme
+  in use before is kept in `/var/lib/orac-branding/plymouth.previous`. `prerm` reverts before removal.
+- GRUB theme `orac` (`/usr/share/grub/themes/orac`): fonts are pf2 files built with `grub-mkfont -n <family>`.
+  GRUB names a font `<family> <style> <size>`, so `-n` must be the family only; `TestGrubTheme` checks that every
+  font in `theme.txt` matches a name embedded in a shipped pf2.
+- SDDM theme `orac` (Qt 6): the ORAC core video (`orac-core.webm`, from the ORAC web console) behind a glass
+  panel. Preview it without logging out: `sddm-greeter-qt6 --test-mode --theme <dir>` (`sddm --version` hangs).
+- Cursor theme `Orac` (`/usr/share/icons/Orac`): Breeze cursors recoloured, SVG plus Xcursor. Rebuild with
+  `python3 -I packages/orac-branding/tools/build_cursors.py packages/orac-branding/root/usr/share/icons/Orac`.
+  This machine's libXcursor searches `~/.icons:/usr/share/icons:/usr/share/pixmaps`, not `~/.local/share/icons`.
+- Plasma style `orac` (Breeze Dark with Orac colours; panel and widgets only) and the animated wallpaper plugin
+  `org.orac.living` (QML layers, no compiled shaders: this machine has no `qsb`).
 
-State on this machine: 1.2.0-1 is installed from this repo, `Theme=orac`, the motd link is in place and the
-ORAC banner is applied.
+Machines: the notes above were first written on the workstation. On **orac-D1** (192.168.1.203, checked
+2026-10-10) 1.2.1-1 was installed but the ORAC splash had never been activated: `plymouthd.conf` still said
+`Theme=shadowfetch` (last changed 2026-09-10, before this repo existed). GRUB used Shadowfetch's `umbra` theme and
+SDDM its `umbra` login theme until `orac-boot-theme apply`.
 
 ## Open items
 

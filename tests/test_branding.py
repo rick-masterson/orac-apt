@@ -188,3 +188,79 @@ class TestLoginMessage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestBootTheme(unittest.TestCase):
+    """orac-boot-theme: GRUB and SDDM drop-ins sort after Shadowfetch's and are removed on revert."""
+
+    TOOL = ROOT.parent / "sbin" / "orac-boot-theme"
+
+    def run_tool(self, root, *args):
+        import subprocess
+        env = {"DPKG_ROOT": root, "PATH": os.environ.get("PATH", "/usr/bin:/bin")}
+        return subprocess.run(["sh", str(self.TOOL), *args], env=env, check=True,
+                              capture_output=True, text=True).stdout
+
+    def test_apply_then_revert_in_a_scratch_root(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as root:
+            self.run_tool(root, "apply")
+            grub = Path(root, "etc/default/grub.d/99-orac.cfg").read_text()
+            sddm = Path(root, "etc/sddm.conf.d/99-orac.conf").read_text()
+            self.assertIn("GRUB_THEME=/usr/share/grub/themes/orac/theme.txt", grub)
+            self.assertIn("Current=orac", sddm)
+            self.assertIn("CursorTheme=Orac", sddm)
+            # Drop-ins load in name order; ORAC's must come after Shadowfetch's 10-shadowfetch.
+            self.assertGreater("99-orac.cfg", "10-shadowfetch.cfg")
+            self.assertIn("boot menu:  orac", self.run_tool(root, "status"))
+            self.run_tool(root, "revert")
+            self.assertFalse(Path(root, "etc/default/grub.d/99-orac.cfg").exists())
+            self.assertFalse(Path(root, "etc/sddm.conf.d/99-orac.conf").exists())
+
+    def test_drop_ins_point_at_shipped_themes(self):
+        text = self.TOOL.read_text()
+        for theme in re.findall(r"/usr/share/grub/themes/[\w.-]+/theme\.txt", text):
+            self.assertTrue((ROOT / Path(theme).relative_to("/usr/share")).is_file(), theme)
+        self.assertTrue((ROOT / "sddm" / "themes" / "orac" / "metadata.desktop").is_file())
+        self.assertTrue((ROOT / "icons" / "Orac" / "index.theme").is_file())
+
+
+class TestGrubTheme(unittest.TestCase):
+    THEME = ROOT / "grub" / "themes" / "orac" / "theme.txt"
+
+    def test_every_image_ships(self):
+        for name in re.findall(r'desktop-image:\s*"([^"]+)"', self.THEME.read_text()):
+            self.assertTrue((self.THEME.parent / name).is_file(), name)
+
+    def test_every_font_is_built(self):
+        # GRUB matches fonts by the name embedded in the .pf2 (grub-mkfont -n).
+        embedded = set()
+        for pf2 in self.THEME.parent.glob("*.pf2"):
+            data = pf2.read_bytes()
+            i = data.index(b"NAME") + 8
+            embedded.add(data[i:data.index(b"\0", i)].decode())
+        for font in re.findall(r'font\s*[=:]\s*"([^"]+)"', self.THEME.read_text()):
+            self.assertIn(font, embedded)
+
+
+class TestSddmTheme(unittest.TestCase):
+    DIR = ROOT / "sddm" / "themes" / "orac"
+
+    def test_metadata_and_config_files_ship(self):
+        meta = (self.DIR / "metadata.desktop").read_text()
+        self.assertIn("QtVersion=6", meta)
+        for key in ("MainScript", "ConfigFile", "Screenshot"):
+            name = re.search(rf"^{key}=(.+)$", meta, re.M).group(1)
+            self.assertTrue((self.DIR / name).is_file(), name)
+        for name in re.findall(r"^\w+=(.+)$", (self.DIR / "theme.conf").read_text(), re.M):
+            self.assertTrue((self.DIR / name).is_file(), name)
+
+
+class TestCursors(unittest.TestCase):
+    DIR = ROOT / "icons" / "Orac" / "cursors"
+
+    def test_core_cursors_are_valid_xcursor_files(self):
+        for name in ("left_ptr", "default", "pointer", "text", "wait", "watch"):
+            path = (self.DIR / name).resolve()
+            self.assertTrue(path.is_file(), name)
+            self.assertEqual(path.read_bytes()[:4], b"Xcur", name)

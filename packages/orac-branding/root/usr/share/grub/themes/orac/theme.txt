@@ -1,0 +1,60 @@
+# ORAC GRUB theme: the ORAC core over black, Orac orange / pink / violet.
+# Fonts: Inter and JetBrains Mono (SIL Open Font License), built with grub-mkfont.
+title-text: ""
+desktop-image: "background.png"
+desktop-image-scale-method: "crop"
+desktop-image-h-align: "center"
+desktop-image-v-align: "center"
+desktop-color: "#050308"
+terminal-font: "JetBrains Mono Regular 16"
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+
++ label {
+    top = 6%
+    left = 0
+    width = 100%
+    align = "center"
+    color = "#ff7a2f"
+    font = "Inter Bold 40"
+    text = "orac"
+}
+
++ boot_menu {
+    left = 22%
+    width = 56%
+    top = 70%
+    height = 18%
+    item_font = "Inter Regular 20"
+    item_color = "#9a8fab"
+    selected_item_font = "Inter Regular 20"
+    selected_item_color = "#ece6f3"
+    item_height = 34
+    item_padding = 6
+    item_spacing = 6
+    scrollbar = false
+}
+
++ progress_bar {
+    id = "__timeout__"
+    left = 22%
+    width = 56%
+    top = 91%
+    height = 4
+    show_text = false
+    fg_color = "#e0508a"
+    bg_color = "#1c1529"
+    border_color = "#2e2440"
+}
+
++ label {
+    top = 95%
+    left = 0
+    width = 100%
+    align = "center"
+    color = "#9a8fab"
+    font = "JetBrains Mono Regular 16"
+    text = "Enter boots · e edits · c command line"
+}

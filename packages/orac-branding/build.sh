@@ -16,6 +16,7 @@ find "$stage" -type d -exec chmod 0755 {} +
 find "$stage" -type f -exec chmod 0644 {} +
 chmod 0755 "$stage/DEBIAN/postinst" "$stage/DEBIAN/prerm" "$stage/DEBIAN/postrm"
 if [ -d "$stage/usr/bin" ]; then chmod 0755 "$stage"/usr/bin/*; fi
+if [ -d "$stage/usr/sbin" ]; then chmod 0755 "$stage"/usr/sbin/*; fi
 
 size=$(du -sk --exclude=DEBIAN "$stage" | cut -f1)
 sed -i "/^Architecture:/a Installed-Size: $size" "$stage/DEBIAN/control"

@@ -1,11 +1,11 @@
 Package: orac-branding
-Version: 1.2.1-1
+Version: 1.3.0-1
 Architecture: all
 Maintainer: Rick Masterson <rickm1982@gmail.com>
 Section: misc
 Priority: optional
 Depends: plymouth, plymouth-label
-Recommends: shadowfetch-themes, plasma-workspace, papirus-icon-theme, fastfetch
+Recommends: shadowfetch-themes, plasma-workspace, papirus-icon-theme, fastfetch, sddm, qml6-module-qtmultimedia
 Description: ORAC workstation branding for Shadowfetch
  The ORAC look layered on Shadowfetch's own branding and themes packages:
  a Plymouth boot splash with real boot progress, boot messages and an
@@ -15,5 +15,12 @@ Description: ORAC workstation branding for Shadowfetch
  apply); an ORAC Void colour scheme and profile for Konsole; and the ORAC
  login message (/etc/motd), with Shadowfetch's kept and restored on removal.
  .
- Installing registers the boot splash but does not switch to it. Activate it
- with: sudo plymouth-set-default-theme -R orac
+ Also: a GRUB boot menu theme, an SDDM login theme with the ORAC core
+ looping behind a glass panel, Orac gradient mouse cursors, an Orac Plasma
+ style for the panel and widgets, and the Orac Living Core animated
+ wallpaper.
+ .
+ Installing registers everything but switches nothing at boot. Switch the
+ boot menu, boot splash and login screen together with:
+ sudo orac-boot-theme apply
+ and back with: sudo orac-boot-theme revert

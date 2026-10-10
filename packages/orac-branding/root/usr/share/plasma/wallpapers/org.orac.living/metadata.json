@@ -1,0 +1,16 @@
+{
+    "KPackageStructure": "Plasma/Wallpaper",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Rick Masterson"
+            }
+        ],
+        "Description": "The Orac core, alive: breathing orb, pulsing glow, flickering lightning and a slow parallax drift. Developed with the help of Claude Code.",
+        "Id": "org.orac.living",
+        "License": "GPL-2.0-or-later",
+        "Name": "Orac Living Core",
+        "Version": "1.0"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

@@ -1,0 +1,15 @@
+{
+    "KPlugin": {
+        "Id": "orac",
+        "Name": "Orac",
+        "Description": "Orac palette, based on Breeze Dark. Developed with the help of Claude Code.",
+        "Authors": [
+            {
+                "Name": "Rick Masterson"
+            }
+        ],
+        "License": "LGPL-2.1-or-later",
+        "Version": "1.0"
+    },
+    "X-Plasma-API": "5.0"
+}

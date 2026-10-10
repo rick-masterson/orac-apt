@@ -1,0 +1,76 @@
+#!/bin/sh
+# orac-boot-theme apply|revert|status: switch the boot menu (GRUB), boot splash
+# (Plymouth) and login screen (SDDM) between ORAC and the base system's themes.
+#
+# GRUB and SDDM are switched with drop-ins named 99-orac, which load after
+# Shadowfetch's 10-shadowfetch ones, so Shadowfetch updates don't undo them.
+# Plymouth's theme is a single setting; the one in use before ORAC is
+# remembered and put back on revert.
+set -eu
+ROOT=${DPKG_ROOT:-}
+GRUB_DROPIN=$ROOT/etc/default/grub.d/99-orac.cfg
+SDDM_DROPIN=$ROOT/etc/sddm.conf.d/99-orac.conf
+STATE=$ROOT/var/lib/orac-branding
+PREVIOUS=$STATE/plymouth.previous
+
+need_root() {
+    # A scratch root (DPKG_ROOT, used by the tests) needs no privileges.
+    [ -n "$ROOT" ] || [ "$(id -u)" = 0 ] || { echo "orac-boot-theme: run with sudo" >&2; exit 1; }
+}
+
+plymouth_theme() {
+    plymouth-set-default-theme 2>/dev/null || echo unknown
+}
+
+update_boot() {
+    [ -n "$ROOT" ] && return 0
+    if command -v update-grub >/dev/null 2>&1; then update-grub; fi
+}
+
+case "${1:-status}" in
+apply)
+    need_root
+    mkdir -p "$STATE" "$(dirname "$GRUB_DROPIN")" "$(dirname "$SDDM_DROPIN")"
+    cat > "$GRUB_DROPIN" <<'EOF'
+# Written by orac-boot-theme apply; removed by orac-boot-theme revert.
+GRUB_THEME=/usr/share/grub/themes/orac/theme.txt
+GRUB_GFXMODE=1920x1080,auto
+EOF
+    cat > "$SDDM_DROPIN" <<'EOF'
+# Written by orac-boot-theme apply; removed by orac-boot-theme revert.
+[Theme]
+Current=orac
+CursorTheme=Orac
+EOF
+    current=$(plymouth_theme)
+    if [ "$current" != orac ]; then
+        echo "$current" > "$PREVIOUS"
+    fi
+    if [ -z "$ROOT" ]; then
+        plymouth-set-default-theme -R orac
+    fi
+    update_boot
+    echo "ORAC boot menu, splash and login screen applied. They show from the next boot."
+    ;;
+revert)
+    need_root
+    rm -f "$GRUB_DROPIN" "$SDDM_DROPIN"
+    previous=shadowfetch
+    if [ -s "$PREVIOUS" ]; then previous=$(cat "$PREVIOUS"); fi
+    if [ -z "$ROOT" ] && [ "$(plymouth_theme)" = orac ]; then
+        plymouth-set-default-theme -R "$previous"
+    fi
+    rm -f "$PREVIOUS"
+    update_boot
+    echo "Base system boot menu, splash ($previous) and login screen restored."
+    ;;
+status)
+    echo "boot menu:  $([ -f "$GRUB_DROPIN" ] && echo orac || echo base system)"
+    echo "splash:     $(plymouth_theme)"
+    echo "login:      $([ -f "$SDDM_DROPIN" ] && echo orac || echo base system)"
+    ;;
+*)
+    echo "usage: orac-boot-theme apply|revert|status" >&2
+    exit 2
+    ;;
+esac

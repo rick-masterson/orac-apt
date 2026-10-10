@@ -1,10 +1,13 @@
 #!/bin/sh
 set -e
+# Removing the package removes the boot menu, splash and login themes, so hand
+# those stages back to the base system first (while orac-boot-theme exists).
 if [ "$1" = remove ] || [ "$1" = deconfigure ]; then
-    if [ -z "${DPKG_ROOT:-}" ] && command -v plymouth-set-default-theme >/dev/null 2>&1 \
-        && [ "$(plymouth-set-default-theme)" = orac ]; then
-        echo "orac-branding: ORAC is the active boot splash; switch back first:" >&2
-        echo "  sudo plymouth-set-default-theme -R shadowfetch" >&2
+    ROOT=${DPKG_ROOT:-}
+    if [ -f "$ROOT/etc/default/grub.d/99-orac.cfg" ] || [ -f "$ROOT/etc/sddm.conf.d/99-orac.conf" ] \
+        || { [ -z "$ROOT" ] && command -v plymouth-set-default-theme >/dev/null 2>&1 \
+             && [ "$(plymouth-set-default-theme)" = orac ]; }; then
+        "$ROOT/usr/sbin/orac-boot-theme" revert || true
     fi
 fi
 exit 0
