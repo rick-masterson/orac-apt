@@ -1,3 +1,13 @@
+orac-branding (1.3.2-1) umbra; urgency=medium
+
+  * Boot splash: the GRUB background (the ORAC core over black) now fills the
+    screen behind the splash, scaled to cover and centred, so the boot menu's
+    picture carries on through Plymouth. The fixed 320 px emblem is dropped;
+    it looked far too big at boot resolutions. The wordmark, dots, slim bar
+    and boot message sit under the core.
+
+ -- Rick Masterson <rickm1982@gmail.com>  Sat, 10 Oct 2026 20:30:00 +0000
+
 orac-branding (1.3.1-1) umbra; urgency=medium
 
   * Boot splash: a compact centred column like Shadowfetch's, instead of the

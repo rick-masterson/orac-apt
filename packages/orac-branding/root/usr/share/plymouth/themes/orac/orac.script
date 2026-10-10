@@ -1,5 +1,5 @@
 # ORAC Plymouth boot splash.
-# Black, with a compact centred column: the ORAC core emblem, wordmark,
+# The GRUB picture full screen, with a compact column under the core: wordmark,
 # pulsing status dots and a slim gradient progress bar.
 #
 # Only calls that exist in Plymouth's script plugin: a Sprite cannot be scaled
@@ -16,18 +16,21 @@ screen.h = Window.GetHeight();
 screen.x = Window.GetX();
 screen.y = Window.GetY();
 
-# --- Layout: a compact column at the centre, top to bottom: emblem, wordmark,
-# status dots, slim progress bar, boot message. Nothing is scaled to the
-# screen, so it stays tight on any resolution. ---
-emblem.image = Image("emblem.png");
-emblem.x = screen.x + screen.w / 2 - emblem.image.GetWidth() / 2;
-emblem.y = screen.y + screen.h * 0.44 - emblem.image.GetHeight() / 2;
-emblem.sprite = Sprite(emblem.image);
-emblem.sprite.SetPosition(emblem.x, emblem.y, 5);
+# --- Backdrop: the GRUB background (the ORAC core over black), scaled to cover
+# the screen and centred, so the boot menu's picture carries on into the splash.
+# The column below sits under the core and is not scaled. ---
+bg.source = Image("background.png");
+bg.scale = screen.w / bg.source.GetWidth();
+if (screen.h / bg.source.GetHeight() > bg.scale) bg.scale = screen.h / bg.source.GetHeight();
+bg.image = bg.source.Scale(bg.source.GetWidth() * bg.scale, bg.source.GetHeight() * bg.scale);
+bg.sprite = Sprite(bg.image);
+bg.sprite.SetPosition(screen.x + screen.w / 2 - bg.image.GetWidth() / 2,
+                      screen.y + screen.h / 2 - bg.image.GetHeight() / 2, -10);
 
 # --- Wordmark (#ece6f3) ---
 brand.image = Image.Text("O R A C", 0.93, 0.90, 0.95, 1, "Sans Bold 13");
-brand.y = emblem.y + emblem.image.GetHeight() + 14;
+# The core is about 420 px tall in the 1080 px picture; start just below it.
+brand.y = screen.y + screen.h / 2 + 290 * bg.scale;
 brand.sprite = Sprite(brand.image);
 brand.sprite.SetPosition(screen.x + screen.w / 2 - brand.image.GetWidth() / 2, brand.y, 12);
 
